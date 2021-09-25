@@ -4,7 +4,7 @@
 
 Follow this [tutorial](https://dev.to/andrewbaisden/creating-react-flask-apps-that-connect-to-postgresql-and-harperdb-1op0), ignoring the stuff about harperdb
 
-Assuming that python is installed:
+Assuming that python3 is installed:
 
 1. Install [nmp](https://www.npmjs.com/) (used for some js funcionality, I guess)
 
@@ -29,7 +29,7 @@ Assuming that python is installed:
 
 ### Create a PostgreSQL Database
 
-Create a new database (e.g. "trip_planner") and execute `trip.sql`, creating three tables and inserting to rows to the table route.
+Create a new database (e.g. "trip_planner") and execute `trip.sql`, creating three tables and inserting to rows to the table resource.
 
 
 ### Create a Flask backend server that is connected to the pgSCL database
@@ -42,7 +42,7 @@ In order for the app to connect to the database add a file `.env` the root of th
 >DATABASE_PASSWORD=""
 
 
-When in the root of the repository activate the python environment and set up the environment by running:
+When in the root of the repository activate the python environment and set up the environment for flask by running:
 >export FLASK_APP=index.py <br>
 >export FLASK_ENV=development
 
