@@ -6,7 +6,7 @@ import axios from 'axios';
 import { schema, uiSchema } from './create_schema'
 
 
-function Create(props) {
+function Checklists(props) {
 
     const [data, setData] = useState();
     const apiData = props.apiData;
@@ -43,6 +43,9 @@ function Create(props) {
         <Fragment>
 
             <main>
+
+                <h2> Add Resource </h2>
+
                 <JsonForms
                     data={data}
                     schema={schema}
@@ -54,9 +57,10 @@ function Create(props) {
 
                 <Button onClick={handleSubmit} style={{margin:'1%'}} variant="outlined" color="info" >SUBMIT</Button>
                 
+
                 {loading === true ? (
                     <div>
-                        <h1>Loading...</h1>
+                        <h2>Loading...</h2>
                     </div>
                 ) : (
                     <section>
@@ -67,7 +71,7 @@ function Create(props) {
 
                             return (
                                 <div className="rs-container" key={String(rsId)}>
-                                    <h1>{rsName}</h1>
+                                    <h2>{rsName}</h2>
                                     <p>
                                         <strong>Category:</strong> {rsCat}
                                     </p>
@@ -82,4 +86,4 @@ function Create(props) {
   
 }
 
-export default Create
+export default Checklists

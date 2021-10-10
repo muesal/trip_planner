@@ -29,6 +29,8 @@ h1{
 .menuButtons {
     display: flex;
     flex-direction: row;
+    flex-grow: 1;
+
 }
 
 .menuButton {
@@ -39,5 +41,14 @@ h1{
 .accountButton {
     display: flex;
     flex-direction: row;
-    float: right;
+    align-items: center;
+    justify-content: center;
+}
+
+.accountIcon {
+    transform: scale(1.8);
+}
+
+.test {
+    color: black;
 }

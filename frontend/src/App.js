@@ -3,13 +3,12 @@ import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@material-ui/core/Button';
-import IconButton from '@mui/material/IconButton';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Person from '@material-ui/icons/Person';
 
 import "./App.css";
 import Main from "./pages_components/main_page";
 import Trips from "./pages_components/trips_page"
-import Create from "./pages_components/create_page"
+import Checklist from "./pages_components/checklist_page"
 import Account from "./pages_components/account_page";
 
 
@@ -56,31 +55,31 @@ const App = () => {
                             <div className="menuButtons">
                                 <div className="menuButton">
                                     <Button component={Link} to="/main" variant="contained" color="primary">
-                                        Main
+                                        Home
                                     </Button>
                                 </div>
                                 
                                 <div className="menuButton">
                                     <Button component={Link} to="/trips" variant="contained" color="primary">
-                                        My Trips
+                                        Trips
                                     </Button>
                                 </div>
 
                                 <div className="menuButton">
-                                    <Button component={Link} to="/create" variant="contained" color="primary">
-                                        Create Trip
+                                    <Button component={Link} to="/checklists" variant="contained" color="primary">
+                                        Checklist
                                     </Button>
                                 </div>
                             </div>
 
                             <div className="accountButton">
                                 <div className="accountIcon">
-                                    <IconButton edge="start" color="inherit" aria-label="account" sx={{ mr: 2 }}>
-                                        <AccountCircleIcon />
-                                    </IconButton>
+                                    <Person>
+                                        Account Icon
+                                    </Person>
                                 </div>
                                 <div className="menuButton">
-                                    <Button component={Link} to="/account" variant="contained" color="primary">
+                                    <Button className="test" style={{ fontSize: '18px' }} component={Link} to="/account" variant="text" color="inherit">
                                         My Account
                                     </Button>
                                 </div>
@@ -88,13 +87,12 @@ const App = () => {
 
                         </Toolbar>
                     </AppBar>
-                </header>
+                </header>  
 
-            
                 <Switch>
                     <Route exact path={["/", "/main"]} component={Main} />
                     <Route exact path={"/trips"} component={Trips} />
-                    <Route exact path={"/create"} render={() => <Create apiData={apiData} loading={loading} getData={getData}/>} />
+                    <Route exact path={"/checklists"} render={() => <Checklist apiData={apiData} loading={loading} getData={getData}/>} />
                     <Route exact path={"/account"} component={Account} />
                 </Switch>
 

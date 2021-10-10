@@ -6,7 +6,7 @@ class Main extends Component {
 
     return (
       <div>
-        <p> THIS IS THE MAIN PAGE </p>
+        
       </div>
     );
   }
