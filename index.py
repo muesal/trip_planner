@@ -28,7 +28,7 @@ cur = con.cursor()
 
 @app.route('/')
 def home():
-    cur.execute('SELECT * FROM resource')
+    cur.execute('SELECT * FROM usr')
     rows = cur.fetchall()
     print(rows)
     return jsonify(rows)
@@ -38,7 +38,7 @@ def add_resource():
     if request.method == 'POST':
         data = request.form.to_dict()
         print(data)
-        cur.execute("INSERT INTO resource  (name, category) VALUES (%s, %s)",
+        cur.execute("INSERT INTO usr  (name, email) VALUES (%s, %s)",
             (f"{data['rsName']}",f"{data['rsCat']}"))
         con.commit()
 
