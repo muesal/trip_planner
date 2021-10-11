@@ -4,7 +4,6 @@ import Button from '@material-ui/core/Button';
 import Person from '@material-ui/icons/Person';
 
 import "./App.css";
-import Main from "./pages_components/main_page";
 import Trips from "./pages_components/trips_page"
 import Checklist from "./pages_components/checklist_page"
 import Account from "./pages_components/account_page";
@@ -51,12 +50,6 @@ const App = () => {
 
                             <div className="menuButtons">
                                 <div className="menuButton">
-                                    <Button component={Link} to="/main" variant="contained" color="primary">
-                                        Home
-                                    </Button>
-                                </div>
-                                
-                                <div className="menuButton">
                                     <Button component={Link} to="/trips" variant="contained" color="primary">
                                         Trips
                                     </Button>
@@ -86,8 +79,7 @@ const App = () => {
                 </header>  
 
                 <Switch>
-                    <Route exact path={["/", "/main"]} render={() => <Main />} />
-                    <Route exact path={"/trips"} component={Trips} />
+                    <Route exact path={["/", "/trips"]} render={() => <Trips />} />
                     <Route exact path={"/checklists"} render={() => <Checklist apiData={apiData} loading={loading} getData={getData}/>} />
                     <Route exact path={"/account"} component={Account} />
                 </Switch>
