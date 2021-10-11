@@ -130,3 +130,6 @@ dmypy.json
 
 # ignore the virtual env trip
 trip/*
+
+# ignore .idea of jetbrains
+.idea/

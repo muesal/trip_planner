@@ -38,7 +38,7 @@ The flask backend server is implemented in `index.py`.
 
 In order for the app to connect to the database add a file `.env` the root of the repository, containing add the following lines:
 >DATABASE="trip_planner" <br>
->DATABSE_USERNAME="postgres" <br>
+>DATABASE_USERNAME="postgres" <br>
 >DATABASE_PASSWORD=""
 
 
