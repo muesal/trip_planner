@@ -1,74 +1,102 @@
-import React, { Fragment, useState, useEffect } from 'react';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import Button from '@material-ui/core/Button';
+import Person from '@material-ui/icons/Person';
+
+import "./App.css";
+import Main from "./pages_components/main_page";
+import Trips from "./pages_components/trips_page"
+import Checklist from "./pages_components/checklist_page"
+import Account from "./pages_components/account_page";
+
 
 const App = () => {
-    useEffect(() => {
-        const getAPI = () => {
-            // Change this endpoint to whatever local or online address you have
-            // Local PostgreSQL Database
-            const API = 'http://127.0.0.1:5000/';
 
-            fetch(API)
-                .then((response) => {
-                    console.log(response);
-                    return response.json();
-                })
-                .then((data) => {
-                    console.log(data);
-                    setLoading(false);
-                    setApiData(data);
-                });
-        };
-        getAPI();
+    useEffect(() => {
+        getData();
     }, []);
+
+    const getData = () => {
+        const API = 'http://127.0.0.1:5000/';
+
+        setLoading(true)
+        fetch(API)
+            .then((response) => {
+                console.log(response);
+                return response.json();
+            })
+            .then((data) => {
+                console.log(data);
+                setLoading(false);
+                setApiData(data);
+            });
+    };
+
     const [apiData, setApiData] = useState([]);
     const [loading, setLoading] = useState(true);
-    return (
-        <Fragment>
-            <header>
-                <h1>Trip Planner - Add Resource</h1>
-            </header>
-            <div className="form-container">
-                <h2>Add Resource</h2>
-                <form method="POST" action="http://127.0.0.1:5000/add-resource">
-                    <div>
-                        <label>Name</label>
-                        <input type="text" name="rsName" required />
-                    </div>
-                    <div>
-                        <label>Category (e.g., Food, Gear)</label>
-                        <input type="text" name="rsCat" required />
-                    </div>
-                    <div>
-                        <button type="submit">Add Resource</button>
-                    </div>
-                </form>
-            </div>
-            <main>
-                {loading === true ? (
-                    <div>
-                        <h1>Loading...</h1>
-                    </div>
-                ) : (
-                    <section>
-                        {apiData.map((rs) => {
-                            const rsId = rs[0];
-                            const rsName = rs[1];
-                            const rsCat = rs[2];
 
-                            return (
-                                <div className="rs-container" key={String(rsId)}>
-                                    <h1>{rsName}</h1>
-                                    <p>
-                                        <strong>Category:</strong> {rsCat}
-                                    </p>
+    return (
+
+        <div className="App">
+           <Router>
+
+                <header>
+                    
+
+                            <div className="menuTitle"> 
+                                <h1>
+                                    UTRIP 
+                                </h1>
+                            </div>
+
+                            <div className="menuButtons">
+                                <div className="menuButton">
+                                    <Button component={Link} to="/main" variant="contained" color="primary">
+                                        Home
+                                    </Button>
                                 </div>
-                            );
-                        })}
-                    </section>
-                )}
-            </main>
-        </Fragment>
+                                
+                                <div className="menuButton">
+                                    <Button component={Link} to="/trips" variant="contained" color="primary">
+                                        Trips
+                                    </Button>
+                                </div>
+
+                                <div className="menuButton">
+                                    <Button component={Link} to="/checklists" variant="contained" color="primary">
+                                        Checklist
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="accountButton">
+                                <div className="accountIcon">
+                                    <Person>
+                                        Account Icon
+                                    </Person>
+                                </div>
+                                <div className="menuButton">
+                                    <Button className="test" style={{ fontSize: '18px' }} component={Link} to="/account" variant="text" color="inherit">
+                                        My Account
+                                    </Button>
+                                </div>
+                            </div>
+
+                      
+                </header>  
+
+                <Switch>
+                    <Route exact path={["/", "/main"]} render={() => <Main />} />
+                    <Route exact path={"/trips"} component={Trips} />
+                    <Route exact path={"/checklists"} render={() => <Checklist apiData={apiData} loading={loading} getData={getData}/>} />
+                    <Route exact path={"/account"} component={Account} />
+                </Switch>
+
+            </Router>
+        </div>
+
+        
+        
     );
 };
 

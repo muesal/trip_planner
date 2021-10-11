@@ -1,142 +1,61 @@
-@import url('https://fonts.googleapis.com/css2?family=Arsenal:wght@400;700&display=swap');
-* {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-}
-
-html {
-    font-size: 62.5%;
-}
-
-body {
-    font-size: 1.6rem;
-    font-family: 'Arsenal', sans-serif;
-    /* letter-spacing: 0.2rem; */
-    background: rgb(242, 242, 242);
-    color: #0e0e0e;
-}
-
 header {
-    background: #0e0e0e;
-    padding: 1rem;
-}
-
-header h1 {
-    margin: 0 auto;
-    text-align: center;
-    text-transform: uppercase;
-    color: #ffffff;
-}
-
-section {
+    background-color: rgb(90, 100, 235);
+    width: 100%;
     display: flex;
-    flex-flow: row wrap;
-    justify-content: space-evenly;
-    margin: 4rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
 }
 
-.form-container {
-    margin: 2rem auto;
-    width: 50rem;
-    max-width: 100%;
-    padding: 0 2rem 0 2rem;
+main {
+    width: 50%;
 }
 
-form {
+h1{
+    margin-top: 0%;
+    margin-bottom: 0%;
+    font-size:3.5em;
+    color: white;
+}
+
+.App {
     display: flex;
-    flex-flow: column;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: black;
 }
 
-form input {
-    height: 3rem;
-    padding: 1.5rem;
+.menuTitle {
+    margin-right: 25px;
 }
 
-form textarea {
-    padding: 1.5rem;
-}
-
-form button {
-    padding: 1rem;
-    border: none;
-    background: #5bff3273;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s;
-    text-transform: uppercase;
-}
-
-form button:hover {
-    background: rgb(243, 212, 35);
-}
-
-form div {
+.menuButtons {
     display: flex;
-    flex-flow: column;
-    margin-bottom: 1.3rem;
+    flex-direction: row;
+    flex-grow: 1;
+
 }
 
-.movie-container {
-    background: #5bff3273;
-    padding: 4rem;
-    margin-top: 2rem;
-    border-radius: 2rem 7rem;
-    width: 50rem;
-    max-width: 100%;
+.menuButton {
+    margin-left: 12px;
+    margin-right: 12px;
 }
 
-.movie-container h1 {
-    font-size: 3rem;
+.accountButton {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
 }
 
-.movie-container p {
-    margin: 1rem 0 1rem 0;
-    font-size: 2rem;
+.accountIcon {
+    transform: scale(1.8);
 }
 
-.movie-container img {
-    width: 10rem;
-    height: 15rem;
-}
 
-.high {
-    background: #66cc32;
-    width: 4rem;
-    color: #ffffff;
+.newTripButton {
+    margin-top: 12px;
     text-align: center;
-    font-weight: 700;
-    display: inline-block;
-    padding: 0.5rem;
-    border-radius: 1rem;
 }
-
-.medium {
-    background: #5bff3273;
-    width: 4rem;
-    color: #ffffff;
-    text-align: center;
-    font-weight: 700;
-    display: inline-block;
-    padding: 0.5rem;
-    border-radius: 1rem;
-}
-
-.low {
-    background: #ff0100;
-    width: 4rem;
-    color: #ffffff;
-    text-align: center;
-    font-weight: 700;
-    display: inline-block;
-    padding: 0.5rem;
-    border-radius: 1rem;
-}
-
-@media screen and (max-width: 1094px) {
-    section {
-        justify-content: center;
-        /* margin: 0 auto; */
-    }
-}
-
