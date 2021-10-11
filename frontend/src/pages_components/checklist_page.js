@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react';
 import { JsonForms } from '@jsonforms/react';
-import Button from '@mui/material/Button';
+import Button from '@material-ui/core/Button';
 import { materialRenderers, materialCells } from '@jsonforms/material-renderers';
 import axios from 'axios';
 import { schema, uiSchema } from './create_schema'

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
 import Button from '@material-ui/core/Button';
 import Person from '@material-ui/icons/Person';
 
@@ -43,8 +41,7 @@ const App = () => {
            <Router>
 
                 <header>
-                    <AppBar position="static" >
-                        <Toolbar>
+                    
 
                             <div className="menuTitle"> 
                                 <h1>
@@ -85,12 +82,11 @@ const App = () => {
                                 </div>
                             </div>
 
-                        </Toolbar>
-                    </AppBar>
+                      
                 </header>  
 
                 <Switch>
-                    <Route exact path={["/", "/main"]} component={Main} />
+                    <Route exact path={["/", "/main"]} render={() => <Main />} />
                     <Route exact path={"/trips"} component={Trips} />
                     <Route exact path={"/checklists"} render={() => <Checklist apiData={apiData} loading={loading} getData={getData}/>} />
                     <Route exact path={"/account"} component={Account} />
