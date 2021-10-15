@@ -39,6 +39,7 @@ CREATE TABLE kindField (
 
 CREATE TABLE trip (
     tripID     SERIAL PRIMARY KEY,
+    name       VARCHAR(50),
     usrID      INTEGER REFERENCES usr,
     kindID     INTEGER REFERENCES kind,
     start_date DATE, -- format: YYYYMMDD
@@ -96,8 +97,8 @@ CREATE TABLE message (
 -- Create functions
 ------------------------------------------------------------------------------------------------------------------------
 -- create trip with given data, add its forms, default fields, and chats
-CREATE OR REPLACE FUNCTION create_trip (usr int, kind int, start_date DATE,
-    duration int, location char ) returns int AS $$
+CREATE OR REPLACE FUNCTION create_trip (trip_name varchar(50), usr int, kind int, start_date DATE,
+    duration int, location char, content TEXT ) returns int AS $$
 DECLARE
     trip INTEGER;
     form INTEGER;
@@ -106,8 +107,8 @@ DECLARE
 BEGIN
 
     -- create trip
-    INSERT INTO trip (usrID, kindID, start_date, duration, location) VALUES
-        (usr, kind, start_date, duration, location) RETURNING tripID INTO trip;
+    INSERT INTO trip (name, usrID, kindID, start_date, duration, location, content) VALUES
+        (trip_name, usr, kind, start_date, duration, location, content) RETURNING tripID INTO trip;
 
     -- create general form
     INSERT INTO form (tripID, name, dayOfTrip) VALUES
@@ -141,7 +142,7 @@ $$ LANGUAGE plpgsql;
 ------------------------------------------------------------------------------------------------------------------------
 -- Insert default data (kind, kindField, section, topic)
 ------------------------------------------------------------------------------------------------------------------------
-INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing');
+INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing'), (3, 'scubadiving');
 
 INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food');
 
@@ -160,11 +161,14 @@ CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
     INSERT INTO friend (usrID1, usrID2) VALUES (1, 2);
 
     -- user 1 creates a climbing trip starting today with a duration of 3 days, in umea
-    SELECT create_trip (1, 2, current_date, 3, 'Umea');
+    SELECT create_trip ('Climbing in Umea', 1, 2, current_date, 3, 'Umea', 'A beautiful climbing trip in the famous mountains of Umea City');
+    SELECT create_trip ('Scubadiving in Australia', 1, 3, current_date, 7, 'Australia', 'Australian fish are funny so will be this trip');
 
     -- usr1 will bring everything
     UPDATE field SET usrID = 1;
 
     INSERT INTO participates (tripID, usrID) VALUES (1, 1), (1, 2);
+    INSERT INTO participates (tripID, usrID) VALUES (2, 1), (2, 2);
+
 
 $$ LANGUAGE SQL;

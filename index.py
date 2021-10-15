@@ -53,17 +53,25 @@ def get_trips():
     user_id = 1
     # TODO: get user id: session['id']?
     cur.execute(
-        "SELECT kindID, start_date, duration, location FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID ORDER BY t.start_date",
+        '''SELECT t.tripID, t.name, k.name, t.start_date, t.duration, t.location, t.content 
+        FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID 
+        INNER JOIN kind k ON t.kindID = k.kindID
+        ORDER BY t.start_date''',
         [user_id])
     trips = cur.fetchmany(size=5)
+
+    print(trips)
     data = []
     id = 0
     for trip in trips:
         data.insert(id, {
-            'kind': trip[0],
-            'start': trip[1],
-            'duration': trip[2],
-            'location': trip[3]
+            'id': trip[0],
+            'name': trip[1],
+            'kind': trip[2],
+            'start': trip[3],
+            'duration': trip[4],
+            'location': trip[5],
+            'content': trip[6],
         })
         id += 1
     return jsonify(data)
