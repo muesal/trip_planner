@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -6,10 +6,15 @@ import CardActions from '@mui/material/CardActions';
 import Typography from '@mui/material/Typography';
 import Button from '@material-ui/core/Button';
 import NewTripDialog from "./new_trip_dialog"
+import axios from "axios";
 
 function Main(props) {
 
     const [newTripDialogOpen, setNewTripialogOpen] = useState(false);
+
+    useEffect(() => {
+        getTrip();
+    }, [])
 
     const handleOpen = () => {
         setNewTripialogOpen(true)
@@ -24,6 +29,21 @@ function Main(props) {
         {id: 1, name: "Climbing Mont Fuji", description: "Travel to Japan", date: "30/10/2021", duration: 14},
         {id: 2, name: "Hiking", description: "Hiking in sweden", date: "17/03/2022", duration: 2}
     ]
+
+    const getTrip = () => {
+        axios({
+                method: "get",
+                url: "http://127.0.0.1:5000/trips",
+                data: {},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+    }
 
 
     return (

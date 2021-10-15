@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS
-    message, chat, topic, field, section, item,
-    form, participates, trip, kindItem, kind, friend, usr;
+    message, chat, topic, field, section,
+    form, participates, trip, kindField, kind, friend, usr
+    CASCADE;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Create all tables
@@ -23,9 +24,15 @@ CREATE TABLE kind (
     name   VARCHAR(50)
 );
 
-CREATE TABLE kindItem (
-    kindID   INTEGER REFERENCES kind ON DELETE CASCADE,
-    name     VARCHAR(50),
+CREATE TABLE section (
+    sectionID INTEGER PRIMARY KEY,
+    name      VARCHAR(100)
+);
+
+CREATE TABLE kindField (
+    kindID    INTEGER REFERENCES kind ON DELETE CASCADE,
+    name      VARCHAR(50),
+    sectionID INTEGER REFERENCES section,
     UNIQUE (kindID, name)
 ); -- maybe add cardinality to sort them?
 -- maybe add quantity. Maybe quantity per day / per person: calculate in create_trip
@@ -33,10 +40,12 @@ CREATE TABLE kindItem (
 CREATE TABLE trip (
     tripID     SERIAL PRIMARY KEY,
     usrID      INTEGER REFERENCES usr,
-    kindID     VARCHAR(50),
-    start_date DATE,
+    kindID     INTEGER REFERENCES kind,
+    start_date DATE, -- format: YYYYMMDD
     duration   INTEGER CHECK (duration > 0),
-    location   VARCHAR(50)
+    location   VARCHAR(50),
+    content    TEXT,
+    finished   BOOLEAN
 );
 
 CREATE TABLE participates (
@@ -51,23 +60,14 @@ CREATE TABLE form (
     dayOfTrip INTEGER
 );
 
-CREATE TABLE item (
-    itemID   SERIAL PRIMARY KEY,
-    name     VARCHAR(100),
-    quantity INTEGER CHECK (quantity > 0)
-);
-
-CREATE TABLE section (
-    sectionID SERIAL PRIMARY KEY,
-    name      VARCHAR(100)
-);
-
 CREATE TABLE field (
     fieldID     SERIAL PRIMARY KEY,
     formID      INTEGER REFERENCES form ON DELETE CASCADE,
-    itemID      INTEGER REFERENCES item,
+    name        VARCHAR(100),
+    quantity    INTEGER CHECK (quantity > 0),
     sectionID   INTEGER REFERENCES section,
-    usrID       INTEGER REFERENCES usr
+    usrID       INTEGER REFERENCES usr,
+    packed      boolean
 );
 
 -- tables for the chat
@@ -101,7 +101,6 @@ CREATE OR REPLACE FUNCTION create_trip (usr int, kind int, start_date DATE,
 DECLARE
     trip INTEGER;
     form INTEGER;
-    item INTEGER;
     i record;
     t record;
 BEGIN
@@ -115,10 +114,9 @@ BEGIN
         (trip, 'General', 0) RETURNING formID INTO form;
 
     -- add its fields
-    FOR i IN SELECT name FROM  kindItem WHERE kindID = kind
+    FOR i IN SELECT name, sectionID FROM  kindField WHERE kindID = kind
     loop
-        INSERT INTO item (name, quantity) VALUES (i.name, 1) RETURNING itemID INTO item;
-        INSERT INTO field (formID, itemID) VALUES (form, item);
+        INSERT INTO field (formID, name, quantity, sectionID, packed) VALUES (form, i.name, 1, i.sectionID, false);
     END loop;
 
     -- create forms for every day
@@ -141,17 +139,17 @@ $$ LANGUAGE plpgsql;
 
 
 ------------------------------------------------------------------------------------------------------------------------
--- Insert default data (kind, kindItem, section, topic)
+-- Insert default data (kind, kindField, section, topic)
 ------------------------------------------------------------------------------------------------------------------------
 INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing');
 
-INSERT INTO kindItem (kindID, name) VALUES
-    (1, 'tent'), (1, 'sleeping bag'), (1, 'matches'),
-    (2, 'helmet'), (2, 'magnesium'), (2, 'harness'), (2, 'rope');
+INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food');
+
+INSERT INTO kindField (kindID, name, sectionID) VALUES
+    (1, 'tent', 1), (1, 'sleeping bag',1), (1, 'matches',1),
+    (2, 'helmet',1), (2, 'magnesium',1), (2, 'harness',1), (2, 'rope',1);
 
 INSERT INTO topic (topicID, name) VALUES (1, 'General'), (2, 'Transport'), (3, 'Food');
-
--- todo: insert into section.
 
 -- create two users, which are friends, user1 creates a hiking trip.
 CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
@@ -161,13 +159,12 @@ CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
 
     INSERT INTO friend (usrID1, usrID2) VALUES (1, 2);
 
-    -- user 1 creates a hiking trip starting today with a duration of 3 days, in umea
-    SELECT create_trip (1, 1, current_date, 3, 'Umea');
+    -- user 1 creates a climbing trip starting today with a duration of 3 days, in umea
+    SELECT create_trip (1, 2, current_date, 3, 'Umea');
+
+    -- usr1 will bring everything
+    UPDATE field SET usrID = 1;
 
     INSERT INTO participates (tripID, usrID) VALUES (1, 1), (1, 2);
 
 $$ LANGUAGE SQL;
-
-
-
-
