@@ -1,10 +1,10 @@
 export const schema = {
     type: "object",
-    required: ["title", "description", "date", "duration"],
+    required: ["name", "description", "date", "duration"],
     properties: {
-        title: {
+        name: {
             type: "string",
-            title: "Title"
+            title: "Name"
         },
         description: {
             type: "string",
@@ -27,7 +27,7 @@ export const uiSchema = {
             elements: [
                 {
                     type: "Control",
-                    scope: "#/properties/title"
+                    scope: "#/properties/name"
                 },
                 {
                     type: "Control",
