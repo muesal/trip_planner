@@ -10,6 +10,10 @@ export const schema = {
             type: "string",
             title: "Description",
         },
+        location: {
+            type: "string",
+            title: "Location",
+        },
         date: {
             type: "string",
             title: "Date",
@@ -32,6 +36,10 @@ export const uiSchema = {
                 {
                     type: "Control",
                     scope: "#/properties/description",
+                },
+                {
+                    type: "Control",
+                    scope: "#/properties/location",
                 },
                 {
                     type: "Control",
