@@ -70,8 +70,8 @@ Find it with `locate postgresql.conf` and adjust the port to 5432.
 
 ### Build the front end
 
-The files in the frontend folder were created with the command 'npx create-react-app frontend`.
-The Files `frontend/src/App.js` and `frontend/src/App.css`, containing the main funcionalities of the frontend, are adapted to fit our pourpose.
+The files in the frontend folder were created with the command npx create-react-app frontend`.
+The Files `frontend/src/App.js` and `frontend/src/App.css`, containing the main functionalities of the frontend, are adapted to fit our purpose.
 
 Start the server in the directory 'frontend' with:
 >npm start 
