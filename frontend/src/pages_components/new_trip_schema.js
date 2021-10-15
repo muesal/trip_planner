@@ -15,7 +15,7 @@ export const schema = {
             title: "Date",
         },
         duration: {
-            type: "string",
+            type: "number",
             title: "Duration",
         }
     }

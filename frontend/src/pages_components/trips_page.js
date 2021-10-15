@@ -74,7 +74,7 @@ function Main(props) {
                                                 {row.date}
                                             </Typography>
                                             <Typography variant="subtitle1" color="text.secondary" component="div">
-                                                {row.duration}
+                                                {row.duration} days
                                             </Typography>
                                         </CardContent>
                                         <CardActions>
