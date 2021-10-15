@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 import React, { useState, useEffect } from 'react';
 import { Switch, Route, Link } from "react-router-dom";
 import Button from '@material-ui/core/Button';
@@ -26,7 +28,7 @@ function App() {
         const API = 'http://127.0.0.1:5000/';
 
         setLoading(true)
-        fetch(API)
+        /*fetch(API)
             .then((response) => {
                 console.log(response);
                 return response.json();
@@ -35,7 +37,8 @@ function App() {
                 console.log(data);
                 setLoading(false);
                 setApiData(data);
-            });
+            });*/
+        
     };
 
     const goToTrip = (trip) => {
