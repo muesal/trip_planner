@@ -7,7 +7,6 @@ import Typography from '@mui/material/Typography';
 import Button from '@material-ui/core/Button';
 import NewTripDialog from "./new_trip_dialog"
 
-
 function Main(props) {
 
     const [newTripDialogOpen, setNewTripialogOpen] = useState(false);
@@ -21,9 +20,9 @@ function Main(props) {
     }
 
     const rows_tmp = [
-        {id: 0, name: "Nydala", description: "Trip to the lake", date: "01/01/2022", duration: "2 days"}, 
-        {id: 1, name: "Climbing Mont Fuji", description: "Travel to Japan", date: "30/10/2021", duration: "2 weeks"},
-        {id: 2, name: "Hiking", description: "Hiking in sweden", date: "17/03/2022", duration: "2 days"}
+        {id: 0, name: "Nydala", description: "Let's go to the lake, best place in town to see northern lights", date: "01/01/2022", duration: 3}, 
+        {id: 1, name: "Climbing Mont Fuji", description: "Travel to Japan", date: "30/10/2021", duration: 14},
+        {id: 2, name: "Hiking", description: "Hiking in sweden", date: "17/03/2022", duration: 2}
     ]
 
 
@@ -41,7 +40,7 @@ function Main(props) {
                 <div className="tripList">
                     {rows_tmp.map((row) => {
                         return (
-                            <div className="tripCard">
+                            <div className="tripCard" key={row.id}>
                                 <Card sx={{ display: 'flex', backgroundColor: 'rgb(156, 156, 247)' }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                                         <CardContent sx={{ flex: '1 0 auto' }}>
@@ -59,15 +58,19 @@ function Main(props) {
                                             </Typography>
                                         </CardContent>
                                         <CardActions>
-                                            <Button size="small">Share</Button>
+                                            <Button onClick={() =>{props.goToTrip(row)}} variant="text" color="primary">
+                                                More
+                                            </Button>
                                         </CardActions>
                                         
                                     </Box>
                                 </Card>
+
                             </div>
                         );
                     })}
                 </div> 
+
             </main> 
     );
   
