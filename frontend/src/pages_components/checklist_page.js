@@ -55,7 +55,7 @@ function Checklists(props) {
                     cells={materialCells}
                 />
 
-                <Button onClick={handleSubmit} style={{margin:'1%'}} variant="outlined" color="info" >SUBMIT</Button>
+                <Button onClick={handleSubmit} style={{margin:'1%'}} variant="outlined" color="default" >SUBMIT</Button>
                 
 
                 {loading === true ? (
