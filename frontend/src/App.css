@@ -63,8 +63,35 @@ h1{
 .tripCard {
     margin-top: 12px;
     margin-bottom: 12px;
-}
+}                   
 
 .tripList {
     margin-top: 30px;;
+}
+
+.tripDetails {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.descriptionBox {
+    text-align: center;
+}
+
+.editTripButton {
+    margin-top: 12px;
+    text-align: center;
+}
+
+.day {
+    margin: 12px 12px 12px 12px;
+}
+
+.resources {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
 }
