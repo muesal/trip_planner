@@ -120,13 +120,17 @@ def get_trip(trip_id):
     else:  # PUT
         # TODO: only creater may update. check first?
 
-        # TODO: Catch empty fields
         data = request.json['data']
-        cur.execute("UPDATE trip SET (start_date, duration, location, content) = (%s, %s, %s, %s) "
-                    "WHERE tripID = %s AND usrID = %s RETURNING start_date, duration, location, content;",
-                    (data['date'], data['duration'], data['location'], data['description'], data['id'], user_id))
-        cur.execute('COMMIT;')
+        if trip_id is None:
+            trip_id = data['id']
+        # todo: kind can not be updated
+
+        cur.execute("UPDATE trip SET (name, start_date, duration, location, content) = (%s, TO_DATE(%s, 'YYYY/MM/DD'), "
+                    "%s, %s, %s) WHERE tripID = %s AND usrID = %s RETURNING start_date, duration, location, content;",
+                    (f"{data['name']}", f"{data['start']}", f"{data['duration']}", f"{data['location']}",
+                     f"{data['content']}", trip_id, user_id))
         trip = cur.fetchone()
+
         if trip is None:
             return jsonify(error="Updated data could not be saved"), 500
         else:
@@ -136,5 +140,5 @@ def get_trip(trip_id):
                 'location': trip[2],
                 'description': trip[3]
             }]
-            return jsonify(data)  # todo or error, if no trip / no authorization
+            return jsonify(data)
 

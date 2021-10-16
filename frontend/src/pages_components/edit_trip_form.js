@@ -5,6 +5,7 @@ import { schema, uiSchema } from './new_trip_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { JsonForms } from '@jsonforms/react';
 import axios from "axios";
+import moment from "moment";
 
 
 function EditTripForm(props) {
@@ -16,6 +17,7 @@ function EditTripForm(props) {
     }
 
     const saveChanges = () => {
+
 
         axios({
                 method: "put",
@@ -38,6 +40,8 @@ function EditTripForm(props) {
     }
 
     useEffect(() => {
+        console.log(props.trip)
+        props.trip.start = moment(props.trip.start).format("DD/MM/YYYY")
         setData(props.trip)
     }, [props.trip])
 

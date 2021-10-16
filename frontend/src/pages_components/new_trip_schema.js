@@ -1,12 +1,12 @@
 export const schema = {
     type: "object",
-    required: ["name", "description", "date", "duration"],
+    required: ["name", "content", "location", "date", "duration"],
     properties: {
         name: {
             type: "string",
             title: "Name"
         },
-        description: {
+        content: {
             type: "string",
             title: "Description",
         },
@@ -14,7 +14,7 @@ export const schema = {
             type: "string",
             title: "Location",
         },
-        date: {
+        start: {
             type: "string",
             title: "Date",
         },
@@ -35,7 +35,7 @@ export const uiSchema = {
                 },
                 {
                     type: "Control",
-                    scope: "#/properties/description",
+                    scope: "#/properties/content",
                 },
                 {
                     type: "Control",
@@ -43,7 +43,7 @@ export const uiSchema = {
                 },
                 {
                     type: "Control",
-                    scope: "#/properties/date",
+                    scope: "#/properties/start",
                 },
                 {
                     type: "Control",
