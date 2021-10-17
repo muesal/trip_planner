@@ -32,16 +32,17 @@ def home():
 
 # Create a new trip.
 @app.route('/create-trip', methods=['POST'])
-def add_resource():
+def add_trip():
     data = request.form.to_dict()
     # TODO: get user id
     user_id = 1
-    cur.execute("SELECT create_trip (%s, %s, TO_DATE(%s,'YYYYMMDD'), %s, %s )",
-                (user_id, f"{data['tKind']}", f"{data['tStart']}", f"{data['tDuration']}", f"{data['tLocation']}"))
+    cur.execute("SELECT kindID FROM kind WHERE name = %s", f"{data['tKind']}")
+    cur.execute("SELECT create_trip (%s, %s, %s, TO_DATE(%s,'YYYY/MM/DD'), %s, %s, %s)",
+                (f"{data['name']}", user_id, cur.fetchone()[0], f"{data['start']}", f"{data['duration']}",
+                 f"{data['location']}", f"{data['content']}"))
     con.commit()
-    created_trip = con.fetchone()[0]
+    created_trip = cur.fetchone()[0]
 
-    # TODO: what is shown after the trip was created?
     # TODO: error if something at creation failed, check for correctness before creating
 
     return redirect('http://localhost:3000/trip/' + created_trip, code=200)
@@ -78,32 +79,32 @@ def get_trips():
 
 
 # return the checklist to the given trip for that user
-@app.route('/checklist/<trip_id>', methods=['GET'])
+@app.route('/checklist/<trip_id>', methods=['GET', 'PUT'])
 def get_checklist(trip_id):
     # TODO: userID, hash trip id?
     user_id = 1
-    cur.execute("SELECT fi.name, fi.quantity FROM field fi JOIN form fo ON fi.formID = fo.formID AND fo.tripID = %s WHERE fi.usrID = %s ",
-                (trip_id, user_id))
-    checklist = cur.fetchall()
-    data = []
-    id = 0
-    for cl in checklist:
-        data.insert(id, {
-            'name': cl[0],
-            'quantity': cl[1]
-        })
-        id += 1
-    # TODO: error if trip not found
-    return jsonify(data)
-
-
-# TODO: update checklist
-
+    if request.method == 'GET':
+        cur.execute("SELECT fi.name, fi.quantity FROM field fi JOIN form fo ON fi.formID = fo.formID AND fo.tripID = %s WHERE fi.usrID = %s ",
+                    (trip_id, user_id))
+        checklist = cur.fetchall()
+        data = []
+        id = 0
+        for cl in checklist:
+            data.insert(id, {
+                'name': cl[0],
+                'quantity': cl[1]
+            })
+            id += 1
+        # TODO: error if trip not found
+        return jsonify(data)
+    else:  # PUT
+        # TODO: update checklist, after updating the bacjend.
+        return ''
 
 # Edit / see trip
 @app.route('/trip/<trip_id>', methods=['GET', 'PUT'])
 def get_trip(trip_id):
-    # TODO: userID, hash trip id?
+    # TODO: userID, add trip id to path in js.
     user_id = 1
 
     if request.method == 'GET':
@@ -118,7 +119,7 @@ def get_trip(trip_id):
         }]
         return jsonify(data)  # todo or error, if no trip / no authorization
     else:  # PUT
-        # TODO: only creater may update. check first?
+        # TODO: only creator may update. check first?
 
         data = request.json['data']
         if trip_id is None:
