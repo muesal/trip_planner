@@ -43,7 +43,8 @@ def add_trip():
     con.commit()
     created_trip = cur.fetchone()[0]
 
-    # TODO: error if something at creation failed, check for correctness before creating
+    if created_trip is None:
+        return jsonify(error="Data could not be saved"), 500
 
     return redirect('http://localhost:3000/trip/' + created_trip, code=200)
 
@@ -57,15 +58,16 @@ def get_trips():
         '''SELECT t.tripID, t.name, k.name, t.start_date, t.duration, t.location, t.content 
         FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID 
         INNER JOIN kind k ON t.kindID = k.kindID
+        WHERE t.finished IS NOT False
         ORDER BY t.start_date''',
         [user_id])
     trips = cur.fetchmany(size=5)
 
     print(trips)
     data = []
-    id = 0
+    counter = 0
     for trip in trips:
-        data.insert(id, {
+        data.insert(counter, {
             'id': trip[0],
             'name': trip[1],
             'kind': trip[2],
@@ -101,10 +103,11 @@ def get_checklist(trip_id):
         # TODO: update checklist, after updating the bacjend.
         return ''
 
+
 # Edit / see trip
 @app.route('/trip/<trip_id>', methods=['GET', 'PUT'])
 def get_trip(trip_id):
-    # TODO: userID, add trip id to path in js.
+    # TODO: userID
     user_id = 1
 
     if request.method == 'GET':
@@ -119,27 +122,31 @@ def get_trip(trip_id):
         }]
         return jsonify(data)  # todo or error, if no trip / no authorization
     else:  # PUT
-        # TODO: only creator may update. check first?
-
         data = request.json['data']
         if trip_id is None:
             trip_id = data['id']
-        # todo: kind can not be updated
+
+        cur.execute("SELECT usrID FROM trip WHERE tripID = %s", trip_id)
+        creator = cur.fetchone()[0]
+        if creator is None:
+            return jsonify(error="This trip does not exist"), 500  # TODO: error code?
+        if creator != user_id:
+            return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
         cur.execute("UPDATE trip SET (name, start_date, duration, location, content) = (%s, TO_DATE(%s, 'YYYY/MM/DD'), "
-                    "%s, %s, %s) WHERE tripID = %s AND usrID = %s RETURNING start_date, duration, location, content;",
+                    "%s, %s, %s) WHERE tripID = %s RETURNING start_date, duration, location, content;",
                     (f"{data['name']}", f"{data['start']}", f"{data['duration']}", f"{data['location']}",
                      f"{data['content']}", trip_id, user_id))
         trip = cur.fetchone()
 
         if trip is None:
             return jsonify(error="Updated data could not be saved"), 500
-        else:
-            data = [{
-                'start': trip[0],
-                'duration': trip[1],
-                'location': trip[2],
-                'description': trip[3]
-            }]
-            return jsonify(data)
+
+        data = {
+            'start': trip[0],
+            'duration': trip[1],
+            'location': trip[2],
+            'description': trip[3]
+        }
+        return jsonify(data)
 
