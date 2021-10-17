@@ -17,7 +17,6 @@ function App() {
 
     const [apiData, setApiData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedTrip, setSelectedTrip] = useState(null)
     const history = useHistory();
 
     useEffect(() => {
@@ -42,8 +41,7 @@ function App() {
     };
 
     const goToTrip = (trip) => {
-        setSelectedTrip(trip);
-        history.push("/trip");
+        history.push(`/trip/${trip}`);
     }
 
     return (
@@ -91,7 +89,7 @@ function App() {
                 <Route exact path={["/", "/trips"]} render={() => <Trips goToTrip={goToTrip}/>} />
                 <Route exact path={"/checklists"} render={() => <Checklist apiData={apiData} loading={loading} getData={getData}/>} />
                 <Route exact path={"/account"} component={Account} />
-                <Route exact path={"/trip"} render={() => <Trip trip={selectedTrip}/>}/>
+                <Route exact path={"/trip/:id"} render={(matchProps) => <Trip {...matchProps}/>}/>
             </Switch>
 
         </div>

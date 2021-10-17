@@ -10,17 +10,24 @@ import moment from 'moment'
 import { schema, uiSchema } from './new_trip_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import EditTripDialog from "./edit_trip_dialog"
+import axios from "axios";
+
 
 function Trip(props) {
 
     const [tripEditDialogOpen, setTripEditDialogOpen] = useState(false);
     const [days, setDays] = useState([])
     const [data, setData] = useState()
-    const trip = props.trip || {};
+    const [trip, setTrip] = useState(null)
 
     useEffect(() => {
-        processCalendar();
+        getTrip();
     }, [])
+
+    useEffect(() => {
+        if(trip)
+            processCalendar();
+    }, [trip]) 
 
     const handleOpen = () => {
         setTripEditDialogOpen(true)
@@ -38,6 +45,22 @@ function Trip(props) {
         }
         setDays(days_array)
     }
+
+    const getTrip = () => {
+        axios({
+                method: "get",
+                url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
+                data: {},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    console.log(res.data)
+                    setTrip(res.data)
+                })
+                .catch((err) => {
+                    console.log(err);
+                });    
+    }
  
     return (
 
@@ -54,17 +77,22 @@ function Trip(props) {
 
                     <div className="tripName">
                         <Typography component="div" variant="h5">
-                            {trip.name}
+                            {trip ? trip.name : ""}
+                        </Typography>
+                    </div> 
+                    <div className="tripKind">
+                        <Typography component="div" variant="h6">
+                            {trip ? trip.kind + " trip" : ""}
                         </Typography>
                     </div> 
                     <div className="descriptionBox" >
                         <Box p={"20px"} border={1} borderRadius={2}> 
-                            {trip.content}
+                            {trip ? trip.content : ""}
                         </Box>
                     </div>
                     <div className="tripDateDuration">
                         <Box  py={"20px"}> 
-                            {moment(trip.date).format("DD/MM/YYYY")} - {trip.duration} days
+                            {trip ? moment(trip.date).format("DD/MM/YYYY") + " - " + trip.duration + "days" : ""}
                         </Box>
                     </div>
                 </div>

@@ -86,7 +86,7 @@ function Main(props) {
                                             </Typography>
                                         </CardContent>
                                         <CardActions>
-                                            <Button onClick={() =>{props.goToTrip(row)}} variant="text" color="primary">
+                                            <Button onClick={() =>{props.goToTrip(row.id)}} variant="text" color="primary">
                                                 More
                                             </Button>
                                         </CardActions>

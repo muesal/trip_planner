@@ -111,16 +111,20 @@ def get_trip(trip_id):
 
     if request.method == 'GET':
         # TODO: only creator sohuld see 'edit' button
-        cur.execute("SELECT kindID, start_date, duration, location FROM trip t WHERE tripID = %s", [trip_id])
+        cur.execute('''SELECT t.name, k.name, t.start_date, t.duration, t.location, t.content 
+                        FROM trip t INNER JOIN kind k ON t.kindID = k.kindID
+                        WHERE tripID = %s''', [trip_id])
         trip = cur.fetchone()
         if trip is None:
             return ()
 
         data = {
-            'kind': trip[0],
-            'start': trip[1],
-            'duration': trip[2],
-            'location': trip[3]
+            'name': trip[0],
+            'kind': trip[1],
+            'start': trip[2],
+            'duration': trip[3],
+            'location': trip[4],
+            'content': trip[5],
         }
         return jsonify(data)  # todo or error, if no trip / no authorization
     else:  # PUT

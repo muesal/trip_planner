@@ -1,6 +1,8 @@
-import React, { Fragment, useState } from 'react';
+import React, { useState } from 'react';
 import { JsonForms } from '@jsonforms/react';
 import Button from '@material-ui/core/Button';
+import Grid from '@material-ui/core/Grid';
+
 import { materialRenderers, materialCells } from '@jsonforms/material-renderers';
 import axios from 'axios';
 import { schema, uiSchema } from './create_schema'
@@ -40,48 +42,61 @@ function Checklists(props) {
 
     return (
 
-        <Fragment>
+        <>
+            <aside>
+                <Grid item  container direction="column" justifyContent="flex-end" style={{paddingTop:'2%'}}>
+                    <Button  style={{margin:'2%'}} color="primary" variant="outlined"> Delete </Button>
+                    <Button  style={{margin:'2%'}} color="primary" variant="outlined"> Save </Button>
+                    <Button  style={{margin:'2%'}} color="secondary" variant="outlined"> Cancel </Button>
+                </Grid>
+            </aside> 
 
             <main>
+                <div className="Checklist"> 
+                    HELLO
+                </div> 
 
-                <h2> Add Resource </h2>
+                <div className="addResources">
 
-                <JsonForms
-                    data={data}
-                    schema={schema}
-                    uischema={uiSchema}
-                    renderers={materialRenderers}
-                    onChange={({ data, errors }) => {setData(data);}}
-                    cells={materialCells}
-                />
+                    <h2> Add Resource </h2>
 
-                <Button onClick={handleSubmit} style={{margin:'1%'}} variant="outlined" color="default" >SUBMIT</Button>
-                
+                    <JsonForms
+                        data={data}
+                        schema={schema}
+                        uischema={uiSchema}
+                        renderers={materialRenderers}
+                        onChange={({ data, errors }) => {setData(data);}}
+                        cells={materialCells}
+                    />
 
-                {loading === true ? (
-                    <div>
-                        <h2>Loading...</h2>
-                    </div>
-                ) : (
-                    <section>
-                        {apiData.map((rs) => {
-                            const rsId = rs[0];
-                            const rsName = rs[1];
-                            const rsCat = rs[2];
+                    <Button onClick={handleSubmit} style={{margin:'1%'}} variant="outlined" color="default" >SUBMIT</Button>
+                    
 
-                            return (
-                                <div className="rs-container" key={String(rsId)}>
-                                    <h2>{rsName}</h2>
-                                    <p>
-                                        <strong>Category:</strong> {rsCat}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </section>
-                )}
+                    {loading === true ? (
+                        <div>
+                            <h2>Loading...</h2>
+                        </div>
+                    ) : (
+                        <section>
+                            {apiData.map((rs) => {
+                                const rsId = rs[0];
+                                const rsName = rs[1];
+                                const rsCat = rs[2];
+
+                                return (
+                                    <div className="rs-container" key={String(rsId)}>
+                                        <h2>{rsName}</h2>
+                                        <p>
+                                            <strong>Category:</strong> {rsCat}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </section>
+                    )}
+                </div>
             </main>
-        </Fragment>
+        </>
     );
   
 }
