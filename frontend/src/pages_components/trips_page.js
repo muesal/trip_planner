@@ -79,7 +79,7 @@ function Main(props) {
                                                 {row.content}
                                             </Typography>
                                             <Typography variant="subtitle1" color="text.secondary" component="div">
-                                                {`${row.location} - ${moment(row.date).format("DD/MM/YYYY")}`}
+                                                {`${row.location} - ${moment(row.start).format("DD/MM/YYYY")}`}
                                             </Typography>
                                             <Typography variant="subtitle1" color="text.secondary" component="div">
                                                 duration : {row.duration} days
