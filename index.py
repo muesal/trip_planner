@@ -40,8 +40,8 @@ def add_trip():
     cur.execute("SELECT create_trip (%s, %s, %s, TO_DATE(%s,'YYYY/MM/DD'), %s, %s, %s)",
                 (f"{data['name']}", user_id, cur.fetchone()[0], f"{data['start']}", f"{data['duration']}",
                  f"{data['location']}", f"{data['content']}"))
-    con.commit()
     created_trip = cur.fetchone()[0]
+    con.commit()
 
     if created_trip is None:
         return jsonify(error="Data could not be saved"), 500
@@ -114,12 +114,12 @@ def get_trip(trip_id):
         # TODO: only creator sohuld see 'edit' button
         cur.execute("SELECT kindID, start_date, duration, location FROM trip t WHERE tripID = %s", [trip_id])
         trip = cur.fetchone()
-        data = [{
+        data = {
             'kind': trip[0],
             'start': trip[1],
             'duration': trip[2],
             'location': trip[3]
-        }]
+        }
         return jsonify(data)  # todo or error, if no trip / no authorization
     else:  # PUT
         data = request.json['data']
