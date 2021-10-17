@@ -63,7 +63,6 @@ def get_trips():
         [user_id])
     trips = cur.fetchmany(size=5)
 
-    print(trips)
     data = []
     counter = 0
     for trip in trips:
@@ -76,7 +75,7 @@ def get_trips():
             'location': trip[5],
             'content': trip[6],
         })
-        id += 1
+        counter += 1
     return jsonify(data)
 
 
@@ -114,6 +113,9 @@ def get_trip(trip_id):
         # TODO: only creator sohuld see 'edit' button
         cur.execute("SELECT kindID, start_date, duration, location FROM trip t WHERE tripID = %s", [trip_id])
         trip = cur.fetchone()
+        if trip is None:
+            return ()
+
         data = {
             'kind': trip[0],
             'start': trip[1],
