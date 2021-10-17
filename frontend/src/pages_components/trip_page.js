@@ -39,7 +39,7 @@ function Trip(props) {
 
     const processCalendar = () => {
         let days_array = []
-        days_array.push(moment(trip.date).format("DD/MM/YYYY"))
+        days_array.push(moment(trip.start).format("DD/MM/YYYY"))
         for(let i = 1; i < trip.duration; i++) {
             days_array.push(moment(days_array[i-1], "DD/MM/YYYY").add(1, 'days').format("DD/MM/YYYY"))
         }
@@ -92,7 +92,7 @@ function Trip(props) {
                     </div>
                     <div className="tripDateDuration">
                         <Box  py={"20px"}> 
-                            {trip ? moment(trip.date).format("DD/MM/YYYY") + " - " + trip.duration + "days" : ""}
+                            {trip ? moment(trip.start).format("DD/MM/YYYY") + " - " + trip.duration + "days" : ""}
                         </Box>
                     </div>
                 </div>
