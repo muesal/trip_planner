@@ -42,7 +42,7 @@ function Checklists(props) {
 
     return (
 
-        <>
+        <div className="checklistPage">
             <aside>
                 <Grid item  container direction="column" justifyContent="flex-end" style={{paddingTop:'2%'}}>
                     <Button  style={{margin:'2%'}} color="primary" variant="outlined"> Delete </Button>
@@ -96,7 +96,7 @@ function Checklists(props) {
                     )}
                 </div>
             </main>
-        </>
+        </div>
     );
   
 }
