@@ -119,6 +119,7 @@ def get_trip(trip_id):
             return ()
 
         data = {
+            'id': trip_id,
             'name': trip[0],
             'kind': trip[1],
             'start': trip[2],
@@ -129,26 +130,39 @@ def get_trip(trip_id):
         return jsonify(data)  # todo or error, if no trip / no authorization
     else:  # PUT
         data = request.json['data']
-        if trip_id is None:
-            trip_id = data['id']
 
-        cur.execute("SELECT usrID FROM trip WHERE tripID = %s", trip_id)
-        creator = cur.fetchone()[0]
-        if creator is None:
+        cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s", [trip_id])
+        trip = cur.fetchone()
+        if trip is None:
             return jsonify(error="This trip does not exist"), 500  # TODO: error code?
-        if creator != user_id:
+        if trip[0] != user_id:
             return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
-        cur.execute("UPDATE trip SET (name, start_date, duration, location, content) = (%s, TO_DATE(%s, 'YYYY/MM/DD'), "
+        # check that all fields are correct / filled
+        if data['name'] is None:
+            data['name'] = trip[1]
+        if data['start'] is None:
+            data['start'] = trip[2]  # TODO: Also check format?
+        if data['duration'] is None:
+            data['duration'] = trip[3]
+        data['duration'] = int(float(data['duration']))  # assure that the value is an integer
+        # TODO: if duration changes, the forms of the trip should adapt too
+        if data['location'] is None:
+            data['location'] = trip[5]
+
+
+        cur.execute("UPDATE trip SET (name, start_date, duration, location, content) = (%s, TO_DATE(%s, 'DD/MM/YYYY'), "
                     "%s, %s, %s) WHERE tripID = %s RETURNING start_date, duration, location, content;",
                     (f"{data['name']}", f"{data['start']}", f"{data['duration']}", f"{data['location']}",
-                     f"{data['content']}", trip_id, user_id))
+                     f"{data['content']}", trip_id))
         trip = cur.fetchone()
+        con.commit()
 
         if trip is None:
             return jsonify(error="Updated data could not be saved"), 500
 
         data = {
+            'id': trip_id,
             'start': trip[0],
             'duration': trip[1],
             'location': trip[2],
