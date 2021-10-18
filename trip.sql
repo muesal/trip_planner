@@ -1,7 +1,7 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
 DROP TABLE IF EXISTS
-    message, chat, topic, field, section,
+    message, chat, topic, field, item, section,
     form, participates, trip, kindField, kind, friend, usr
     CASCADE;
 
@@ -63,14 +63,21 @@ CREATE TABLE form (
     dayOfTrip INTEGER
 );
 
-CREATE TABLE field (
-    fieldID     SERIAL PRIMARY KEY,
-    formID      INTEGER REFERENCES form ON DELETE CASCADE,
+CREATE TABLE item (
+    itemID      SERIAL PRIMARY KEY,
     name        VARCHAR(100),
     quantity    INTEGER CHECK (quantity > 0),
     sectionID   INTEGER REFERENCES section,
     usrID       INTEGER REFERENCES usr,
+    tripID      INTEGER REFERENCES trip,
     packed      boolean
+);
+
+CREATE TABLE field (
+    fieldID     SERIAL PRIMARY KEY,
+    formID      INTEGER REFERENCES form ON DELETE CASCADE,
+    itemID      INTEGER REFERENCES item ON DELETE CASCADE,
+    assigned    BOOLEAN
 );
 
 -- tables for the chat
@@ -119,7 +126,7 @@ BEGIN
     -- add its fields
     PERFORM set_kind(kind, trip);
 
-    -- create forms for every day TODO: test
+    -- create forms for every day
     PERFORM increase_duration (duration, 1, trip);
 
     -- create chats
@@ -128,7 +135,8 @@ BEGIN
         INSERT INTO chat (name, topicID, tripID) VALUES (t.name, t.topicID, trip);
     END loop;
 
-    INSERT INTO participates (tripID, usrID) VALUES (trip, usr);
+    -- creator participates in the trip
+    INSERT INTO participates (usrID, tripID) VALUES (usr, trip);
 
     -- return id of the created trip
     RETURN trip;
@@ -142,8 +150,7 @@ DECLARE
 BEGIN
     FOR day in duration_new + 1..duration_old loop
         for frm in SELECT formID FROM form WHERE tripID = trp and dayOfTrip = day loop
-            DELETE FROM field WHERE formID = frm;
-            -- DELETE FROM item WHERE itemID IN (SELECT fieldID FROM field WHERE formID = frm); TODO: after merge with checklist
+            DELETE FROM item WHERE itemID IN (SELECT fieldID FROM field WHERE formID = frm); -- TODO: after merge with checklist
             DELETE FROM form WHERE formID = frm;
         END loop;
     END loop;
@@ -163,20 +170,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Insert the generic fields to the general form of the trip
+-- Insert the generic fields (with items) to the general form of the trip
 CREATE OR REPLACE FUNCTION set_kind (knd int, trp int) returns void AS $$
 DECLARE
     i record;
     frm INTEGER;
+    itm INTEGER;
 BEGIN
     SELECT formID FROM form WHERE tripID = trp and dayOfTrip = 0 INTO frm;
     FOR i IN SELECT name, sectionID FROM kindField WHERE kindID = knd loop
-        -- TODO: insert into item, not field (after merge with checklist)
-        INSERT INTO field (formID, name, quantity, sectionID, packed) VALUES (frm, i.name, 1, i.sectionID, false);
+       INSERT INTO item (name, quantity, sectionID, packed, tripID) VALUES (i.name, 1, i.sectionID, false, trp)
+            RETURNING itemID into itm;
+        INSERT INTO field (formID, itemID, assigned) VALUES (frm, itm, false);
     END loop;
     UPDATE trip SET kindID = knd WHERE tripID = trp;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION assign_field (usr int, fld int) returns void AS $$
+DECLARE
+    itm INTEGER;
+BEGIN
+    UPDATE field SET assigned = TRUE WHERE fieldID = fld RETURNING itemID INTO itm;
+    UPDATE item SET packed = false, usrID = usr WHERE itemID = itm;
+END;
+$$ LANGUAGE plpgsql;
+
 ------------------------------------------------------------------------------------------------------------------------
 -- Insert default data (kind, kindField, section, topic)
 ------------------------------------------------------------------------------------------------------------------------
@@ -202,8 +221,8 @@ CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
     SELECT create_trip ('Climbing in Umea', 1, 2, current_date, 3, 'Umea', 'A beautiful climbing trip in the famous mountains of Umea City');
     SELECT create_trip ('Scubadiving in Australia', 1, 3, current_date, 7, 'Australia', 'Australian fish are funny so will be this trip');
 
-    -- usr1 will bring everything
-    UPDATE field SET usrID = 1;
+    -- usr1 brings element 1
+    SELECT assign_field(1, 1);
 
     INSERT INTO participates (tripID, usrID) VALUES (1, 2), (2, 2);
 
