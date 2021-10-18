@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+
+import React, { useState, useEffect } from 'react';
 import { JsonForms } from '@jsonforms/react';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
+import { DataGrid } from "@material-ui/data-grid";
 
 import { materialRenderers, materialCells } from '@jsonforms/material-renderers';
 import axios from 'axios';
@@ -11,8 +14,22 @@ import { schema, uiSchema } from './create_schema'
 function Checklists(props) {
 
     const [data, setData] = useState();
+    const [trips, setTrips] = useState(null);
+    const [rows, setRows] = useState(null)
     const apiData = props.apiData;
     const loading = props.loading;
+
+    useEffect(() => {
+        getTrips();
+        setRows(hardcoded_rows)
+    }, [])
+
+    const hardcoded_rows = [{id: 0, name: "mayonnaise", quantity: 2}, {id: 1, name: "chicken", quantity: 1}]
+
+    const columns = [
+        { field: "name", headerName: "Item", flex: 1 },
+        { field: "quantity", headerName: "Quantity", flex: 0.5 },
+    ];
 
     const handleSubmit = async () => {
        
@@ -40,20 +57,52 @@ function Checklists(props) {
         
     }
 
+    const getTrips = () => {
+        axios({
+                method: "get",
+                url: "http://127.0.0.1:5000/trips",
+                data: {},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    setTrips(res.data)
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+ 
+    }
+
     return (
 
         <div className="checklistPage">
-            <aside>
+            {<div className="checklistMenu">
                 <Grid item  container direction="column" justifyContent="flex-end" style={{paddingTop:'2%'}}>
-                    <Button  style={{margin:'2%'}} color="primary" variant="outlined"> Delete </Button>
-                    <Button  style={{margin:'2%'}} color="primary" variant="outlined"> Save </Button>
-                    <Button  style={{margin:'2%'}} color="secondary" variant="outlined"> Cancel </Button>
-                </Grid>
-            </aside> 
 
-            <main>
+                    {trips && 
+                        trips.map((row) => {
+                            return (
+                                <div className="tripButton" key={row.id}>
+                                    <Button  style={{width:200}} color="primary" variant="outlined"> {row.name} </Button>
+                                </div>
+                            );
+                    })}
+                </Grid>
+            </div>}
+
+
+          
                 <div className="Checklist"> 
-                    HELLO
+
+                    <DataGrid
+                        rows={rows || []}
+                        columns={columns}
+                        disableColumnMenu={true}
+                        checkboxSelection={true}
+                        autoHeight
+                        
+                    />
+
                 </div> 
 
                 <div className="addResources">
@@ -95,7 +144,7 @@ function Checklists(props) {
                         </section>
                     )}
                 </div>
-            </main>
+            
         </div>
     );
   
