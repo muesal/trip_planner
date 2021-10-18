@@ -17,7 +17,7 @@ function Checklists(props) {
     const [trips, setTrips] = useState(null);
     const [rows, setRows] = useState(null)
     const apiData = props.apiData;
-    const loading = props.loading; 
+    const loading = props.loading;  
 
     useEffect(() => {
         getTrips();
