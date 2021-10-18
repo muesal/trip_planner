@@ -1,6 +1,28 @@
+import axios from 'axios';
+
+export async function retrieveKinds() {
+
+    axios({
+            method: "get",
+            url: "http://127.0.0.1:5000/kinds",
+            data: {},  // TODO: add userID
+            headers: { "Content-Type": "application/json" },
+        })
+            .then((res) => {
+                let kinds = []
+                for(let kind of res.data)
+                    kinds.push(kind.name)
+
+                schema.properties.tKind.enum = kinds
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+}
+
 export const schema = {
     type: "object",
-    required: ["name", "content", "location", "date", "duration"],
+    required: ["name", "content", "location", "date", "duration", "kind"],
     properties: {
         name: {
             type: "string",
@@ -16,11 +38,17 @@ export const schema = {
         },
         start: {
             type: "string",
+            format: "date-time",
             title: "Date",
         },
         duration: {
-            type: "number",
+            type: "integer",
             title: "Duration",
+        }, 
+        tKind: {
+            type: "string",
+            title: "Kind",
+            enum: [""]
         }
     }
 };
@@ -48,6 +76,10 @@ export const uiSchema = {
                 {
                     type: "Control",
                     scope: "#/properties/duration",
+                }, 
+                {
+                    type: "Control",
+                    scope: "#/properties/tKind",
                 }
             ]
 

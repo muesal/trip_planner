@@ -79,6 +79,24 @@ def get_trips():
     return jsonify(data)
 
 
+# Return all kinds 
+@app.route('/kinds', methods=['GET'])
+def get_kinds():
+    cur.execute(
+        "SELECT * FROM kind k")
+    kinds = cur.fetchall()
+
+    data = []
+    counter = 0
+    for kind in kinds:
+        data.insert(counter, {
+            'id': kind[0],
+            'name': kind[1],
+        })
+        counter += 1
+    return jsonify(data)
+
+
 # return the checklist to the given trip for that user
 @app.route('/checklist/<trip_id>', methods=['GET', 'PUT'])
 def get_checklist(trip_id):

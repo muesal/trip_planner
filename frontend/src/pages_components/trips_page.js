@@ -6,6 +6,8 @@ import CardActions from '@mui/material/CardActions';
 import Typography from '@mui/material/Typography';
 import Button from '@material-ui/core/Button';
 import NewTripDialog from "./new_trip_dialog"
+import { retrieveKinds } from './new_trip_schema'
+
 import axios from "axios";
 import moment from 'moment'
 
@@ -16,6 +18,7 @@ function Main(props) {
 
     useEffect(() => {
         getTrips();
+        retrieveKinds();
     }, [])
 
     const handleOpen = () => {
@@ -51,6 +54,8 @@ function Main(props) {
     }
 
 
+
+
     return (
 
             <main>
@@ -59,7 +64,7 @@ function Main(props) {
                     <Button onClick={handleOpen} variant="contained" color="inherit" >Create Trip</Button>
 
                     {newTripDialogOpen && 
-                        <NewTripDialog handleClose={handleClose} />}
+                        <NewTripDialog handleClose={handleClose} getTrips={getTrips}/>}
                 </div>
 
                 <div className="tripList">

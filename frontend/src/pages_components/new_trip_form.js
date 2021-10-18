@@ -14,6 +14,35 @@ function NewTripForm(props) {
         props.handleClose();
     }
 
+    const submitTrip = async () => {
+
+        console.log(data)
+        
+        /*if(data && data.rsName && data.rsCat) {
+
+            let bodyFormData = new FormData();
+            bodyFormData.append("rsName", data.rsName);
+            bodyFormData.append("rsCat", data.rsCat);
+
+            axios({
+                method: "post",
+                url: "http://127.0.0.1:5000/add-resource",
+                data: bodyFormData,
+                headers: { "Content-Type": "multipart/form-data" },
+            })
+                .then((res) => {
+                    console.log(res);
+                    props.getData()
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+
+        }*/
+
+        props.getTrips(); 
+    }
+
     return (
         <Grid item xs={12} container direction="column" data-cy="formContainer">
         
@@ -27,7 +56,8 @@ function NewTripForm(props) {
         />
 
         <Grid item  container direction="row" justify="flex-end" style={{paddingTop:'2%'}}>
-                <Button onClick={cancelCreation} style={{margin:'2%'}} color="secondary" variant="outlined"> Annuler </Button>
+                <Button onClick={cancelCreation} style={{margin:'2%'}} color="secondary" variant="outlined"> Cancel </Button>
+                <Button onClick={submitTrip} style={{margin:'2%'}} color="primary" variant="outlined"> Create </Button>
         </Grid>
 
     </Grid>
