@@ -36,7 +36,7 @@ def add_trip():
     data = request.form.to_dict()
     # TODO: get user id
     user_id = 1
-    cur.execute("SELECT kindID FROM kind WHERE name = %s", f"{data['tKind']}")
+    cur.execute("SELECT kindID FROM kind WHERE name = %s", [f"{data['tKind']}"])
     cur.execute("SELECT create_trip (%s, %s, %s, TO_DATE(%s,'YYYY/MM/DD'), %s, %s, %s)",
                 (f"{data['name']}", user_id, cur.fetchone()[0], f"{data['start']}", f"{data['duration']}",
                  f"{data['location']}", f"{data['content']}"))
@@ -46,7 +46,7 @@ def add_trip():
     if created_trip is None:
         return jsonify(error="Data could not be saved"), 500
 
-    return redirect('http://localhost:3000/trip/' + created_trip, code=200)
+    return redirect('http://localhost:3000/trip/' + str(created_trip), code=200)
 
 
 # Return 5 soonest trips this user participates in

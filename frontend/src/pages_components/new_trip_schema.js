@@ -38,7 +38,7 @@ export const schema = {
         },
         start: {
             type: "string",
-            format: "date-time",
+            format: "date",
             title: "Date",
         },
         duration: {

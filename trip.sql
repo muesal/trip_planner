@@ -133,6 +133,9 @@ BEGIN
         INSERT INTO chat (name, topicID, tripID) VALUES (t.name, t.topicID, trip);
     END loop;
 
+    INSERT INTO participates (tripID, usrID) VALUES (trip, usr);
+
+
     -- return id of the created trip
     RETURN trip;
 END;
@@ -142,7 +145,7 @@ $$ LANGUAGE plpgsql;
 ------------------------------------------------------------------------------------------------------------------------
 -- Insert default data (kind, kindField, section, topic)
 ------------------------------------------------------------------------------------------------------------------------
-INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing'), (3, 'scubadiving');
+INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing'), (3, 'scubadiving'), (4, 'other');
 
 INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food');
 
@@ -167,8 +170,8 @@ CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
     -- usr1 will bring everything
     UPDATE field SET usrID = 1;
 
-    INSERT INTO participates (tripID, usrID) VALUES (1, 1), (1, 2);
-    INSERT INTO participates (tripID, usrID) VALUES (2, 1), (2, 2);
+    INSERT INTO participates (tripID, usrID) VALUES (1, 2), (2, 2);
+
 
 
 $$ LANGUAGE SQL;

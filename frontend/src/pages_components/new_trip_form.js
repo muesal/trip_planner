@@ -4,6 +4,9 @@ import React, {  useState } from 'react';
 import { schema, uiSchema } from './new_trip_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { JsonForms } from '@jsonforms/react';
+import moment from 'moment'
+import axios from 'axios'
+
 
 
 function NewTripForm(props) {
@@ -16,29 +19,34 @@ function NewTripForm(props) {
 
     const submitTrip = async () => {
 
-        console.log(data)
+        data.start = moment(data.start, "YYYY-MM-DD").format("YYYY/MM/DD")
         
-        /*if(data && data.rsName && data.rsCat) {
+        if(data && data.name && data.content && data.duration && data.location && data.start && data.tKind) {
+
 
             let bodyFormData = new FormData();
-            bodyFormData.append("rsName", data.rsName);
-            bodyFormData.append("rsCat", data.rsCat);
+            bodyFormData.append("name", data.name);
+            bodyFormData.append("content", data.content);
+            bodyFormData.append("duration", data.duration);
+            bodyFormData.append("location", data.location);
+            bodyFormData.append("start", data.start);
+            bodyFormData.append("tKind", data.tKind);
 
             axios({
                 method: "post",
-                url: "http://127.0.0.1:5000/add-resource",
+                url: "http://127.0.0.1:5000/create-trip",
                 data: bodyFormData,
                 headers: { "Content-Type": "multipart/form-data" },
             })
                 .then((res) => {
-                    console.log(res);
-                    props.getData()
+                    props.getTrips();
+                    props.handleClose();
                 })
                 .catch((err) => {
                     console.log(err);
                 });
 
-        }*/
+        }
 
         props.getTrips(); 
     }
