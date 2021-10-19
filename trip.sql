@@ -1,3 +1,5 @@
+-- noinspection SqlNoDataSourceInspectionForFile
+
 DROP TABLE IF EXISTS
     message, chat, topic, field, section,
     form, participates, trip, kindField, kind, friend, usr
@@ -115,17 +117,10 @@ BEGIN
         (trip, 'General', 0) RETURNING formID INTO form;
 
     -- add its fields
-    FOR i IN SELECT name, sectionID FROM  kindField WHERE kindID = kind
-    loop
-        INSERT INTO field (formID, name, quantity, sectionID, packed) VALUES (form, i.name, 1, i.sectionID, false);
-    END loop;
+    PERFORM set_kind(kind, trip);
 
-    -- create forms for every day
-    FOR day in 1..duration loop
-        INSERT INTO form (tripID, name, dayOfTrip) VALUES
-            (trip, 'Breakfast', day), (trip, 'Lunch', day),
-            (trip, 'Dinner', day), (trip, 'Night', day), (trip, 'Other', day);
-    END loop;
+    -- create forms for every day TODO: test
+    PERFORM increase_duration (duration, 1, trip);
 
     -- create chats
     FOR t IN SELECT topicID, name FROM  topic ORDER BY topicID
@@ -135,13 +130,53 @@ BEGIN
 
     INSERT INTO participates (tripID, usrID) VALUES (trip, usr);
 
-
     -- return id of the created trip
     RETURN trip;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function that deletes forms if the duration of a trip is decreased
+CREATE OR REPLACE FUNCTION decrease_duration (duration_new int, duration_old int, trp int) returns void AS $$
+DECLARE
+    frm INTEGER;
+BEGIN
+    FOR day in duration_new + 1..duration_old loop
+        for frm in SELECT formID FROM form WHERE tripID = trp and dayOfTrip = day loop
+            DELETE FROM field WHERE formID = frm;
+            -- DELETE FROM item WHERE itemID IN (SELECT fieldID FROM field WHERE formID = frm); TODO: after merge with checklist
+            DELETE FROM form WHERE formID = frm;
+        END loop;
+    END loop;
+    UPDATE trip SET duration = duration_new WHERE tripID = trp;
+END;
+$$ LANGUAGE plpgsql;
 
+-- Function that adds forms for every day that gets added
+CREATE OR REPLACE FUNCTION increase_duration (duration_new int, duration_old int, trp int) returns void AS $$
+BEGIN
+    FOR day in duration_old..duration_new loop
+        INSERT INTO form (tripID, name, dayOfTrip) VALUES
+            (trp, 'Breakfast', day), (trp, 'Lunch', day),
+            (trp, 'Dinner', day), (trp, 'Night', day);
+    END loop;
+    UPDATE trip SET duration = duration_new WHERE tripID = trp;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Insert the generic fields to the general form of the trip
+CREATE OR REPLACE FUNCTION set_kind (knd int, trp int) returns void AS $$
+DECLARE
+    i record;
+    frm INTEGER;
+BEGIN
+    SELECT formID FROM form WHERE tripID = trp and dayOfTrip = 0 INTO frm;
+    FOR i IN SELECT name, sectionID FROM kindField WHERE kindID = knd loop
+        -- TODO: insert into item, not field (after merge with checklist)
+        INSERT INTO field (formID, name, quantity, sectionID, packed) VALUES (frm, i.name, 1, i.sectionID, false);
+    END loop;
+    UPDATE trip SET kindID = knd WHERE tripID = trp;
+END;
+$$ LANGUAGE plpgsql;
 ------------------------------------------------------------------------------------------------------------------------
 -- Insert default data (kind, kindField, section, topic)
 ------------------------------------------------------------------------------------------------------------------------
@@ -172,6 +207,6 @@ CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
 
     INSERT INTO participates (tripID, usrID) VALUES (1, 2), (2, 2);
 
-
-
 $$ LANGUAGE SQL;
+
+SELECT insert_data();

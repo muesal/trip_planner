@@ -160,31 +160,54 @@ def get_trip(trip_id):
         if data['name'] is None:
             data['name'] = trip[1]
         if data['start'] is None:
-            data['start'] = trip[2]  # TODO: Also check format?
-        if data['duration'] is None:
-            data['duration'] = trip[3]
-        data['duration'] = int(float(data['duration']))  # assure that the value is an integer
-        # TODO: if duration changes, the forms of the trip should adapt too
+            data['start'] = trip[2]
         if data['location'] is None:
             data['location'] = trip[5]
 
-
-        cur.execute("UPDATE trip SET (name, start_date, duration, location, content) = (%s, TO_DATE(%s, 'DD/MM/YYYY'), "
-                    "%s, %s, %s) WHERE tripID = %s RETURNING start_date, duration, location, content;",
-                    (f"{data['name']}", f"{data['start']}", f"{data['duration']}", f"{data['location']}",
-                     f"{data['content']}", trip_id))
+        cur.execute("UPDATE trip SET (name, start_date, location, content) = (%s, TO_DATE(%s, 'DD/MM/YYYY'), "
+                    "%s, %s) WHERE tripID = %s RETURNING start_date, duration, location, content, kindID",
+                    (f"{data['name']}", f"{data['start']}", f"{data['location']}", f"{data['content']}", trip_id))
         trip = cur.fetchone()
         con.commit()
 
         if trip is None:
             return jsonify(error="Updated data could not be saved"), 500
 
+        # If the duration changes, the fields of the trip must be adapted
+        if data['duration'] is not None:
+            data['duration'] = int(float(data['duration']))  # assure that the value is an integer
+            duration = int(trip[1])
+            if duration > data['duration'] > 0:
+                # TODO: Test pgsql function...
+                cur.execute("SELECT decrease_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
+                con.commit()
+                update = cur.fetchone()
+                # TODO: check if worked.
+            if data['duration'] > duration:
+                # TODO: Test pgsql function...
+                cur.execute("SELECT increase_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
+                con.commit()
+                update = cur.fetchone()
+                # TODO: check if worked.
+
+        # If the kind changed, the fields of the new kind must be added
+
+        if data['kind'] is not None:
+            cur.execute("SELECT kindID FROM kind WHERE name = %s", [f"{data['kind']}"])
+            kind = cur.fetchone()
+            if kind is not None and kind[0] != trip[4]:
+                # TODO: Test pgsql function...
+                cur.execute("SELECT set_kind(%s, %s)", (kind, trip_id))
+                con.commit()
+                update = cur.fetchone()
+                # TODO: check if worked
+
         data = {
             'id': trip_id,
             'start': trip[0],
             'duration': trip[1],
             'location': trip[2],
-            'description': trip[3]
+            'description': trip[3],
+            'kind': trip[4]
         }
         return jsonify(data)
-
