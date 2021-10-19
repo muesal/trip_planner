@@ -4,17 +4,54 @@ import React, {  useState, useEffect } from 'react';
 import { schema, uiSchema } from './new_trip_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { JsonForms } from '@jsonforms/react';
+import axios from "axios";
+import moment from "moment";
 
 
 function EditTripForm(props) {
 
     const [data, setData] = useState();
 
-    const cancelCreation = () => {
+    const cancelEdit = () => {
+        props.handleClose();
+    }
+
+    const saveChanges = () => {
+        axios({
+                method: "put",
+                url: "http://127.0.0.1:5000/trip/" + props.trip.id,
+                data: {data},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        props.handleClose();
+    }
+
+
+    const deleteTrip = () => {
+        axios({
+                method: "delete",
+                url: "http://127.0.0.1:5000/trip/" + props.trip.id,
+                data: {},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
         props.handleClose();
     }
 
     useEffect(() => {
+        console.log(props.trip)
+        props.trip.start = moment(props.trip.start).format("DD/MM/YYYY")
         setData(props.trip)
     }, [props.trip])
 
@@ -30,8 +67,10 @@ function EditTripForm(props) {
             cells={materialCells}
         />
 
-        <Grid item  container direction="row" justify="flex-end" style={{paddingTop:'2%'}}>
-                <Button onClick={cancelCreation} style={{margin:'2%'}} color="secondary" variant="outlined"> Annuler </Button>
+        <Grid item  container direction="row" justifyContent="flex-end" style={{paddingTop:'2%'}}>
+                <Button onClick={deleteTrip} style={{margin:'2%'}} color="primary" variant="outlined"> Delete </Button>
+                <Button onClick={saveChanges} style={{margin:'2%'}} color="primary" variant="outlined"> Save </Button>
+                <Button onClick={cancelEdit} style={{margin:'2%'}} color="secondary" variant="outlined"> Cancel </Button>
         </Grid>
 
     </Grid>

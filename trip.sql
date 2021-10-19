@@ -1,5 +1,7 @@
+-- noinspection SqlNoDataSourceInspectionForFile
+
 DROP TABLE IF EXISTS
-    message, chat, topic, field, section,
+    message, chat, topic, field, item, section,
     form, participates, trip, kindField, kind, friend, usr
     CASCADE;
 
@@ -39,6 +41,7 @@ CREATE TABLE kindField (
 
 CREATE TABLE trip (
     tripID     SERIAL PRIMARY KEY,
+    name       VARCHAR(50),
     usrID      INTEGER REFERENCES usr,
     kindID     INTEGER REFERENCES kind,
     start_date DATE, -- format: YYYYMMDD
@@ -60,14 +63,21 @@ CREATE TABLE form (
     dayOfTrip INTEGER
 );
 
-CREATE TABLE field (
-    fieldID     SERIAL PRIMARY KEY,
-    formID      INTEGER REFERENCES form ON DELETE CASCADE,
+CREATE TABLE item (
+    itemID      SERIAL PRIMARY KEY,
     name        VARCHAR(100),
     quantity    INTEGER CHECK (quantity > 0),
     sectionID   INTEGER REFERENCES section,
     usrID       INTEGER REFERENCES usr,
+    tripID      INTEGER REFERENCES trip ON DELETE CASCADE,
     packed      boolean
+);
+
+CREATE TABLE field (
+    fieldID     SERIAL PRIMARY KEY,
+    formID      INTEGER REFERENCES form ON DELETE CASCADE,
+    itemID      INTEGER REFERENCES item ON DELETE CASCADE,
+    assigned    BOOLEAN
 );
 
 -- tables for the chat
@@ -96,8 +106,8 @@ CREATE TABLE message (
 -- Create functions
 ------------------------------------------------------------------------------------------------------------------------
 -- create trip with given data, add its forms, default fields, and chats
-CREATE OR REPLACE FUNCTION create_trip (usr int, kind int, start_date DATE,
-    duration int, location char ) returns int AS $$
+CREATE OR REPLACE FUNCTION create_trip (trip_name varchar(50), usr int, kind int, start_date DATE,
+    duration int, location char, content TEXT ) returns int AS $$
 DECLARE
     trip INTEGER;
     form INTEGER;
@@ -106,25 +116,18 @@ DECLARE
 BEGIN
 
     -- create trip
-    INSERT INTO trip (usrID, kindID, start_date, duration, location) VALUES
-        (usr, kind, start_date, duration, location) RETURNING tripID INTO trip;
+    INSERT INTO trip (name, usrID, kindID, start_date, duration, location, content) VALUES
+        (trip_name, usr, kind, start_date, duration, location, content) RETURNING tripID INTO trip;
 
     -- create general form
     INSERT INTO form (tripID, name, dayOfTrip) VALUES
         (trip, 'General', 0) RETURNING formID INTO form;
 
     -- add its fields
-    FOR i IN SELECT name, sectionID FROM  kindField WHERE kindID = kind
-    loop
-        INSERT INTO field (formID, name, quantity, sectionID, packed) VALUES (form, i.name, 1, i.sectionID, false);
-    END loop;
+    PERFORM set_kind(kind, trip);
 
     -- create forms for every day
-    FOR day in 1..duration loop
-        INSERT INTO form (tripID, name, dayOfTrip) VALUES
-            (trip, 'Breakfast', day), (trip, 'Lunch', day),
-            (trip, 'Dinner', day), (trip, 'Night', day), (trip, 'Other', day);
-    END loop;
+    PERFORM increase_duration (duration, 1, trip);
 
     -- create chats
     FOR t IN SELECT topicID, name FROM  topic ORDER BY topicID
@@ -132,16 +135,71 @@ BEGIN
         INSERT INTO chat (name, topicID, tripID) VALUES (t.name, t.topicID, trip);
     END loop;
 
+    -- creator participates in the trip
+    INSERT INTO participates (usrID, tripID) VALUES (usr, trip);
+
     -- return id of the created trip
     RETURN trip;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function that deletes forms if the duration of a trip is decreased
+CREATE OR REPLACE FUNCTION decrease_duration (duration_new int, duration_old int, trp int) returns void AS $$
+DECLARE
+    frm INTEGER;
+BEGIN
+    FOR day in duration_new + 1..duration_old loop
+        for frm in SELECT formID FROM form WHERE tripID = trp and dayOfTrip = day loop
+            DELETE FROM item WHERE itemID IN (SELECT fieldID FROM field WHERE formID = frm); -- TODO: after merge with checklist
+            DELETE FROM form WHERE formID = frm;
+        END loop;
+    END loop;
+    UPDATE trip SET duration = duration_new WHERE tripID = trp;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function that adds forms for every day that gets added
+CREATE OR REPLACE FUNCTION increase_duration (duration_new int, duration_old int, trp int) returns void AS $$
+BEGIN
+    FOR day in duration_old..duration_new loop
+        INSERT INTO form (tripID, name, dayOfTrip) VALUES
+            (trp, 'Breakfast', day), (trp, 'Lunch', day),
+            (trp, 'Dinner', day), (trp, 'Night', day);
+    END loop;
+    UPDATE trip SET duration = duration_new WHERE tripID = trp;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Insert the generic fields (with items) to the general form of the trip
+CREATE OR REPLACE FUNCTION set_kind (knd int, trp int) returns void AS $$
+DECLARE
+    i record;
+    frm INTEGER;
+    itm INTEGER;
+BEGIN
+    SELECT formID FROM form WHERE tripID = trp and dayOfTrip = 0 INTO frm;
+    FOR i IN SELECT name, sectionID FROM kindField WHERE kindID = knd loop
+       INSERT INTO item (name, quantity, sectionID, packed, tripID) VALUES (i.name, 1, i.sectionID, false, trp)
+            RETURNING itemID into itm;
+        INSERT INTO field (formID, itemID, assigned) VALUES (frm, itm, false);
+    END loop;
+    UPDATE trip SET kindID = knd WHERE tripID = trp;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION assign_field (usr int, fld int) returns void AS $$
+DECLARE
+    itm INTEGER;
+BEGIN
+    UPDATE field SET assigned = TRUE WHERE fieldID = fld RETURNING itemID INTO itm;
+    UPDATE item SET packed = false, usrID = usr WHERE itemID = itm;
+END;
+$$ LANGUAGE plpgsql;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Insert default data (kind, kindField, section, topic)
 ------------------------------------------------------------------------------------------------------------------------
-INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing');
+INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing'), (3, 'scubadiving'), (4, 'other');
 
 INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food');
 
@@ -160,11 +218,14 @@ CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
     INSERT INTO friend (usrID1, usrID2) VALUES (1, 2);
 
     -- user 1 creates a climbing trip starting today with a duration of 3 days, in umea
-    SELECT create_trip (1, 2, current_date, 3, 'Umea');
+    SELECT create_trip ('Climbing in Umea', 1, 2, current_date, 3, 'Umea', 'A beautiful climbing trip in the famous mountains of Umea City');
+    SELECT create_trip ('Scubadiving in Australia', 1, 3, current_date, 7, 'Australia', 'Australian fish are funny so will be this trip');
 
-    -- usr1 will bring everything
-    UPDATE field SET usrID = 1;
+    -- usr1 brings element 1
+    SELECT assign_field(1, 1);
 
-    INSERT INTO participates (tripID, usrID) VALUES (1, 1), (1, 2);
+    INSERT INTO participates (tripID, usrID) VALUES (1, 2), (2, 2);
 
 $$ LANGUAGE SQL;
+
+SELECT insert_data();

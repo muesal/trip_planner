@@ -1,15 +1,20 @@
 export const schema = {
     type: "object",
-    required: ["rsName", "rsCat"],
+    required: ["section", "quantity", "name"],
     properties: {
-        rsName: {
+        name: {
             type: "string",
             title: "Name"
         },
-        rsCat: {
+        section: {
             type: "string",
             title: "Category",
             enum: ["Food", "Gear", "Night stuff"]
+        }, 
+        quantity: {
+            type: "integer", 
+            title: "Quantity", 
+            minimum: 0
         }
     }
 };
@@ -20,11 +25,15 @@ export const uiSchema = {
             elements: [
                 {
                     type: "Control",
-                    scope: "#/properties/rsName"
+                    scope: "#/properties/name"
                 },
                 {
                     type: "Control",
-                    scope: "#/properties/rsCat",
+                    scope: "#/properties/section",
+                },
+                {
+                    type: "Control",
+                    scope: "#/properties/quantity",
                 }
             ]
 

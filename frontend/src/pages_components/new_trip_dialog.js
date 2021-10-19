@@ -5,6 +5,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Grid from '@material-ui/core/Grid';
 import NewTripForm from './new_trip_form'
 
+
 function NewTripDialog(props) {
 
     const handleCloseDialog = () => {
@@ -27,7 +28,7 @@ function NewTripDialog(props) {
                        
                         <DialogContent dividers>
                             <Grid container spacing={3}>
-                                <NewTripForm handleClose={props.handleClose} />
+                                <NewTripForm handleClose={props.handleClose} getTrips={props.getTrips} />
                             </Grid>
                         </DialogContent>
                         

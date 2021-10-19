@@ -1,23 +1,8 @@
 import axios from 'axios';
 
-export async function retrieveKinds() {
+export function updateSchemas(fields) {
 
-    axios({
-            method: "get",
-            url: "http://127.0.0.1:5000/kinds",
-            data: {},  // TODO: add userID
-            headers: { "Content-Type": "application/json" },
-        })
-            .then((res) => {
-                let kinds = []
-                for(let kind of res.data)
-                    kinds.push(kind.name)
-
-                schema.properties.tKind.enum = kinds
-            })
-            .catch((err) => {
-                console.log(err);
-            });
+   
 }
 
 export const schema = {
