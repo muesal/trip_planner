@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { JsonForms } from '@jsonforms/react';
 import moment from 'moment'
-import { schema, uiSchema } from './new_trip_schema'
+import { schema, uiSchema } from './ressources_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import EditTripDialog from "./edit_trip_dialog"
 import axios from "axios";
@@ -18,10 +18,13 @@ function Trip(props) {
     const [tripEditDialogOpen, setTripEditDialogOpen] = useState(false);
     const [days, setDays] = useState([])
     const [data, setData] = useState()
+    const [selectedDay, setSelectedDay] = useState(0)
     const [trip, setTrip] = useState(null)
+    const [fields, setFields] = useState()
 
     useEffect(() => {
         getTrip();
+        getFields();
     }, [])
 
     useEffect(() => {
@@ -46,6 +49,32 @@ function Trip(props) {
         setDays(days_array)
     }
 
+    const getFields = () => {
+        axios({
+                method: "get",
+                url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
+                data: {},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    let field_tmp = new Array(res.data[res.data.length - 1].dayOfTrip + 1);
+                    for(let i = 0; i < field_tmp.length; i++) 
+                        field_tmp[i] = {}
+                    
+                    for(let field of res.data) {
+                        if(!field_tmp[field.dayOfTrip][field.formName]) 
+                            field_tmp[field.dayOfTrip][field.formName] = []
+                        
+                        field_tmp[field.dayOfTrip][field.formName].push(field)
+                    }
+                    setFields(field_tmp)
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+   
+    }
+
     const getTrip = () => {
         axios({
                 method: "get",
@@ -54,7 +83,6 @@ function Trip(props) {
                 headers: { "Content-Type": "application/json" },
             })
                 .then((res) => {
-                    console.log(res.data)
                     setTrip(res.data)
                 })
                 .catch((err) => {
@@ -102,7 +130,7 @@ function Trip(props) {
                         {days.map((day, index) => {
                             return (
                                 <div className="day" key={index}>
-                                    <Button onClick={() => {console.log("hello")}} variant="contained" color="inherit" >{day}</Button>
+                                    <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="inherit" >{day}</Button>
                                 </div>          
                             );
                         })}
@@ -117,6 +145,17 @@ function Trip(props) {
                         onChange={({ data, errors }) => {setData(data);}}
                         cells={materialCells}
                     />
+                    </div> 
+
+                    <div className="formChoice">
+                        {fields && 
+                            Object.keys(fields[selectedDay]).map((form, index) => {
+                            return (
+                                <div className="formButton" key={index}>
+                                    <Button onClick={() => {console.log("hello")}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button>
+                                </div>          
+                            );
+                        })}
                     </div> 
                 </div> 
             </main> 
