@@ -20,8 +20,6 @@ function Checklists(props) {
   const [trips, setTrips] = useState(null);
   const [rows, setRows] = useState(null)
   const [selectedTrip, setSelectedTrip] = useState(null)
-  const apiData = props.apiData;
-  const loading = props.loading;
   const [value, setValue] = useState(0);
 
   const handleChange = (event, newValue) => {
@@ -35,7 +33,7 @@ function Checklists(props) {
 
   const hardcoded_rows = [{ id: 0, name: "mayonnaise", quantity: 2 }, { id: 1, name: "chicken", quantity: 1 }, { id: 2, name: "chicken", quantity: 1 }, { id: 3, name: "chicken", quantity: 1 }, { id: 4, name: "chicken", quantity: 1 }, { id: 5, name: "chicken", quantity: 1 }]
 
-
+ 
   const columns = [
     { field: "name", headerName: "Item", flex: 1 },
     { field: "quantity", headerName: "Quantity", flex: 0.5 },

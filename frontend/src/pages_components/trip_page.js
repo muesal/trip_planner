@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { JsonForms } from '@jsonforms/react';
 import moment from 'moment'
-import { schema, uiSchema } from './ressources_schema'
+import { schema, uiSchema, updateSchemas } from './ressources_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import EditTripDialog from "./edit_trip_dialog"
 import axios from "axios";
@@ -19,8 +19,10 @@ function Trip(props) {
     const [days, setDays] = useState([])
     const [data, setData] = useState()
     const [selectedDay, setSelectedDay] = useState(0)
+    const [selectedForm, setSelectedForm] = useState("")
     const [trip, setTrip] = useState(null)
     const [fields, setFields] = useState()
+    const [formOK, setFormOK] = useState(false)
 
     useEffect(() => {
         getTrip();
@@ -32,6 +34,19 @@ function Trip(props) {
             processCalendar();
     }, [trip]) 
 
+    useEffect(() => {
+        
+        if(fields) {
+            setSelectedForm(Object.keys(fields[selectedDay])[0])
+            changeSchemas(fields[selectedDay][selectedForm])
+        }
+    }, [fields, selectedDay]) 
+
+    useEffect(() => {
+        if(fields) 
+            changeSchemas(fields[selectedDay][selectedForm]);
+    }, [selectedForm]) 
+
     const handleOpen = () => {
         setTripEditDialogOpen(true)
     }
@@ -40,11 +55,15 @@ function Trip(props) {
         setTripEditDialogOpen(false)
     }
 
+    const changeSchemas = (form) => {
+        setFormOK(updateSchemas(form))
+    }
+
     const processCalendar = () => {
-        let days_array = []
+        let days_array = ["Whole Trip"]
         days_array.push(moment(trip.start).format("DD/MM/YYYY"))
         for(let i = 1; i < trip.duration; i++) {
-            days_array.push(moment(days_array[i-1], "DD/MM/YYYY").add(1, 'days').format("DD/MM/YYYY"))
+            days_array.push(moment(days_array[i], "DD/MM/YYYY").add(1, 'days').format("DD/MM/YYYY"))
         }
         setDays(days_array)
     }
@@ -120,7 +139,7 @@ function Trip(props) {
                     </div>
                     <div className="tripDateDuration">
                         <Box  py={"20px"}> 
-                            {trip ? moment(trip.start).format("DD/MM/YYYY") + " - " + trip.duration + "days" : ""}
+                            {trip ? moment(trip.start).format("DD/MM/YYYY") + " - " + trip.duration + " days" : ""}
                         </Box>
                     </div>
                 </div>
@@ -137,14 +156,14 @@ function Trip(props) {
                     
                     </div>
                     <div className="resourcesForm"> 
-                    <JsonForms
+                    { formOK && <JsonForms
                         data={data}
                         schema={schema}
                         uischema={uiSchema}
                         renderers={materialRenderers}
                         onChange={({ data, errors }) => {setData(data);}}
                         cells={materialCells}
-                    />
+                    />}
                     </div> 
 
                     <div className="formChoice">
@@ -152,7 +171,7 @@ function Trip(props) {
                             Object.keys(fields[selectedDay]).map((form, index) => {
                             return (
                                 <div className="formButton" key={index}>
-                                    <Button onClick={() => {console.log("hello")}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button>
+                                    <Button onClick={() => {console.log(schema); console.log(uiSchema); setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button>
                                 </div>          
                             );
                         })}

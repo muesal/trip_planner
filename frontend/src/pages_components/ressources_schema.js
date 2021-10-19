@@ -1,40 +1,39 @@
-import axios from 'axios';
-
 export function updateSchemas(fields) {
 
+    if(!fields || (fields.length === 1 && !fields[0].fieldID))
+        return false;
+
+    let elements_tmp = []
+    let required_tmp = []
+    let properties_tmp = {}
+
+    for(let field of fields) {
+        properties_tmp[field.fieldName] = {
+            type: "string",
+            title: field.fieldName + " x" + field.fieldQuantity 
+        };
+
+        required_tmp.push(field.fieldName)
+
+        elements_tmp.push({
+            type: "Control",
+            scope: "#/properties/" + field.fieldName 
+        })
+    }
+
+    schema.required = required_tmp
+    schema.properties = properties_tmp
+    uiSchema.elements = elements_tmp
+    
+    return true;
    
 }
 
 export const schema = {
     type: "object",
-    required: ["name", "content", "location", "date", "duration", "kind"],
+    required: [""],
     properties: {
-        name: {
-            type: "string",
-            title: "Name"
-        },
-        content: {
-            type: "string",
-            title: "Description",
-        },
-        location: {
-            type: "string",
-            title: "Location",
-        },
-        start: {
-            type: "string",
-            format: "date",
-            title: "Date",
-        },
-        duration: {
-            type: "integer",
-            title: "Duration",
-        }, 
-        tKind: {
-            type: "string",
-            title: "Kind",
-            enum: [""]
-        }
+    
     }
 };
 
@@ -42,30 +41,7 @@ export const uiSchema = {
 
             type: "VerticalLayout",
             elements: [
-                {
-                    type: "Control",
-                    scope: "#/properties/name"
-                },
-                {
-                    type: "Control",
-                    scope: "#/properties/content",
-                },
-                {
-                    type: "Control",
-                    scope: "#/properties/location",
-                },
-                {
-                    type: "Control",
-                    scope: "#/properties/start",
-                },
-                {
-                    type: "Control",
-                    scope: "#/properties/duration",
-                }, 
-                {
-                    type: "Control",
-                    scope: "#/properties/tKind",
-                }
+            
             ]
 
 };

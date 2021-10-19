@@ -342,11 +342,16 @@ def get_trip(trip_id):
 @app.route('/forms/<trip_id>', methods=['GET', 'PUT'])
 def get_forms(trip_id):
     if request.method == 'GET':
-        cur.execute('''SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, fi.name, fi.quantity, s.name, fi.usrID, fi.packed
-                        FROM form fo LEFT OUTER  JOIN field fi ON fo.formID = fi.formID
-                        LEFT OUTER JOIN section s ON s.sectionID = fi.sectionID 
+        cur.execute('''SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, i.name, i.quantity, s.name, i.usrID, i.packed, u.name
+                        FROM form fo LEFT OUTER  JOIN field fi ON fo.formID = fi.formID 
+                        LEFT OUTER JOIN item i ON i.itemID = fi.itemID
+                        LEFT OUTER JOIN section s ON s.sectionID = i.sectionID 
+                        LEFT OUTER JOIN usr u ON u.usrID = i.usrID  
                         WHERE fo.tripID = %s
                         ORDER BY fo.formID, fo.formID, fi.fieldID''', [trip_id])
+
+
+
 
         
         forms = cur.fetchall()
@@ -367,6 +372,7 @@ def get_forms(trip_id):
                 'sectionName': form[6],
                 'fieldUsrID': form[7],
                 'fieldPacked': form[8],
+                'fieldUsrName': form[9]
             })
             counter += 1
         return jsonify(data)
