@@ -27,7 +27,7 @@ cur = con.cursor()
 
 @app.route('/')
 def home():
-    return ''
+    return redirect('http://localhost:3000/trips/', code=200)
 
 
 # Create a new trip.
@@ -98,31 +98,142 @@ def get_kinds():
 
 
 # return the checklist to the given trip for that user
-@app.route('/checklist/<trip_id>', methods=['GET', 'PUT'])
-def get_checklist(trip_id):
+@app.route('/checklist/<trip_id>', methods=['GET', 'PUT', 'POST', 'DELETE'])
+def checklist(trip_id):
     # TODO: userID, hash trip id?
     user_id = 1
+
+    # If the trip does not exist or the user is not participating return error
+    cur.execute("SELECT * FROM participates WHERE tripID = %s and usrID = %s", (trip_id, user_id))
+    up = cur.fetchall()
+    if up is None:
+        return jsonify(error="Trip not found"), 400  # TODO: Differ between trip not found / user not participating?
+
     if request.method == 'GET':
-        cur.execute("SELECT fi.name, fi.quantity FROM field fi JOIN form fo ON fi.formID = fo.formID AND fo.tripID = %s WHERE fi.usrID = %s ",
+        # Get all items this user has for this trip, return them
+        cur.execute("SELECT i.itemID, i.name, i.quantity, s.name, i.packed FROM item i"
+                    "INNER JOIN section s ON s.sectionID = i.sectionID WHERE tripID = %s AND usrID = %s ",
                     (trip_id, user_id))
-        checklist = cur.fetchall()
+        cl = cur.fetchall()
         data = []
-        id = 0
-        for cl in checklist:
-            data.insert(id, {
-                'name': cl[0],
-                'quantity': cl[1]
+        counter = 0
+        for cl in cl:
+            data.insert(counter, {
+                'id': cl[0],
+                'name': cl[1],
+                'quantity': cl[2],
+                'section': cl[3],
+                'packed': cl[4]
             })
-            id += 1
-        # TODO: error if trip not found
+            counter += 1
+
         return jsonify(data)
-    else:  # PUT
-        # TODO: update checklist, after updating the bacjend.
-        return ''
+
+    elif request.method == 'PUT':
+        # Update the item (name, quantity, section or packed)
+        data = request.json['data']
+
+        cur.execute("SELECT name, quantity, sectionID FROM item WHERE itemID = %s AND usrID = %s AND tripID = %s",
+                    (f"{data['item']}", user_id, trip_id))
+        item = cur.fetchone()
+        if item is None:
+            return jsonify(error="This item could not be found"), 500  # TODO: error code?
+
+        # check that all fields are correct / filled
+        if data['name'] is None:
+            data['name'] = item[1]
+        if data['quantity'] is None:
+            data['quantity'] = item[2]
+        else:
+            data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
+        if data['packed'] is None:
+            data['packed'] = item[2]
+        if data['section'] is None:
+            data['section'] = item[3]
+        else:
+            cur.execute("SELECT sectionID FROM section WHERE name = %s", [data['section']])
+            data['section'] = cur.fetchone()[0]   # TODO: this could throw an error, if the name is wrong
+
+        cur.execute("UPDATE item SET (name, quantity, packed, section) = (%s, %s, %s, %s) WHERE itemID = %s "
+                    "RETURNING name, quantity, section, packed",
+                    (f"{data['name']}", f"{data['quantity']}", f"{data['packed']}", f"{data['section']}",
+                     f"{data['item']}"))
+        con.commit()
+
+        it = cur.fetchone()
+        item = {
+            'id': data['item'],
+            'name': it[0],
+            'quantity': it[1],
+            'section': it[2],
+            'packed': it[3]
+        }
+
+        return jsonify(item)
+
+    elif request.method == 'POST':
+        # Insert a new item for this user
+        data = request.json['data']
+
+        # check that all fields are correct / filled
+        if data['name'] is None:
+            data['name'] = 'New Item'
+        if data['quantity'] is None:
+            data['quantity'] = 1
+        else:
+            data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
+        if data['section'] is None:
+            data['section'] = 1
+        else:
+            cur.execute("SELECT sectionID FROM section WHERE name = %s", [data['section']])
+            data['section'] = cur.fetchone()[0]  # TODO: this could throw an error, if the name is wrong
+
+        cur.execute(
+            "INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) VALUES (%s, %s, %s, %s, %s, %s) "
+            "RETURNING itemID, packed",
+            (f"{data['name']}", f"{data['quantity']}", 'False', f"{data['section']}", user_id, trip_id))
+        con.commit()
+
+        it = cur.fetchone()
+        item = {
+            'id': it[0],
+            'name': data['name'],
+            'quantity': data['quantity'],
+            'section': data['section'],
+            'packed': False
+        }
+
+        return jsonify(item)
+
+    else:  # DELETE
+        # Delete the item (for this user)
+        data = request.json['data']
+
+        cur.execute("SELECT name, quantity, sectionID FROM item WHERE itemID = %s AND usrID = %s AND tripID = %s",
+                    (data['id'], user_id, trip_id))
+        item = cur.fetchone()
+        if item is None:
+            return jsonify(error="This item could not be found"), 500  # TODO: error code?
+
+        cur.execute("SELECT fieldID FROM field WHERE itemID = %s", [f"{data['item']}"])
+        field = cur.fetchone
+        if field is None:
+            # Delete the item, if it is a personal item (no respective field)
+            cur.execute("DELETE FROM item WHERE itemID = %s RETURNING itemID", [f"{data['item']}"])
+        else:
+            # otherwise un-assign the user from this item
+            cur.execute("UPDATE field SET assigned = False WHERE fieldID = %s RETURNING fieldID", (field[0]))
+            if cur.fetchone is not None:
+                cur.execute("UPDATE item SET (usrID , packed) = (Null, False) WHERE itemID = %s RETURNING itemID", f"{data['item']}")
+        it = cur.fetchone
+        if it is None:
+            return jsonify(error="Item could not be deleted"), 500  # TODO: error code?
+
+        return ''  # TODO: redirect to get item
 
 
 # Edit / see trip
-@app.route('/trip/<trip_id>', methods=['GET', 'PUT'])
+@app.route('/trip/<trip_id>', methods=['GET', 'PUT', 'DELETE'])
 def get_trip(trip_id):
     # TODO: userID
     user_id = 1
@@ -146,7 +257,7 @@ def get_trip(trip_id):
             'content': trip[5],
         }
         return jsonify(data)  # todo or error, if no trip / no authorization
-    else:  # PUT
+    elif request.method == 'PUT':
         data = request.json['data']
 
         cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s", [trip_id])
@@ -178,13 +289,11 @@ def get_trip(trip_id):
             data['duration'] = int(float(data['duration']))  # assure that the value is an integer
             duration = int(trip[1])
             if duration > data['duration'] > 0:
-                # TODO: Test pgsql function...
                 cur.execute("SELECT decrease_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
                 con.commit()
                 update = cur.fetchone()
                 # TODO: check if worked.
             if data['duration'] > duration:
-                # TODO: Test pgsql function...
                 cur.execute("SELECT increase_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
                 con.commit()
                 update = cur.fetchone()
@@ -196,7 +305,6 @@ def get_trip(trip_id):
             cur.execute("SELECT kindID FROM kind WHERE name = %s", [f"{data['kind']}"])
             kind = cur.fetchone()
             if kind is not None and kind[0] != trip[4]:
-                # TODO: Test pgsql function...
                 cur.execute("SELECT set_kind(%s, %s)", (kind, trip_id))
                 con.commit()
                 update = cur.fetchone()
@@ -211,6 +319,24 @@ def get_trip(trip_id):
             'kind': trip[4]
         }
         return jsonify(data)
+
+    else:  # DELETE
+        cur.execute("SELECT usrID FROM trip WHERE tripID = %s", [trip_id])
+        trip = cur.fetchone()
+        if trip is None:
+            return jsonify(error="This trip does not exist"), 500  # TODO: error code?
+        if trip[0] != user_id:
+            return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
+
+        cur.execute("DELETE FROM trip WHERE tripID = %s RETURNING tripID", [trip_id])
+        con.commit()
+        trip = cur.fetchone()
+
+        if trip is None:
+            return jsonify(error="Trip could not be deleted"), 500
+
+        return redirect('http://localhost:3000/trips/', code=200)
+
 
 # Get form 
 @app.route('/forms/<trip_id>', methods=['GET', 'PUT'])

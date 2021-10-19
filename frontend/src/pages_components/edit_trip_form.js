@@ -17,8 +17,6 @@ function EditTripForm(props) {
     }
 
     const saveChanges = () => {
-
-
         axios({
                 method: "put",
                 url: "http://127.0.0.1:5000/trip/" + props.trip.id,
@@ -36,6 +34,18 @@ function EditTripForm(props) {
 
 
     const deleteTrip = () => {
+        axios({
+                method: "delete",
+                url: "http://127.0.0.1:5000/trip/" + props.trip.id,
+                data: {},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
         props.handleClose();
     }
 
