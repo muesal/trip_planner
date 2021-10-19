@@ -27,7 +27,7 @@ cur = con.cursor()
 
 @app.route('/')
 def home():
-    return ''
+    return redirect('http://localhost:3000/trips/', code=200)
 
 
 # Create a new trip.
@@ -182,8 +182,6 @@ def checklist(trip_id):
             data['quantity'] = 1
         else:
             data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
-        if data['packed'] is None:
-            data['packed'] = 'False'
         if data['section'] is None:
             data['section'] = 1
         else:
@@ -191,9 +189,9 @@ def checklist(trip_id):
             data['section'] = cur.fetchone()[0]  # TODO: this could throw an error, if the name is wrong
 
         cur.execute(
-            "INSERT INTO item (name, quantity, packed, sectionID, userID, tripID) VALUES (%s, %s, %s, %s, %s, %s) "
-            "RETURNING itemID",
-            (f"{data['name']}", f"{data['quantity']}", f"{data['packed']}", f"{data['section']}", user_id, trip_id))
+            "INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) VALUES (%s, %s, %s, %s, %s, %s) "
+            "RETURNING itemID, packed",
+            (f"{data['name']}", f"{data['quantity']}", 'False', f"{data['section']}", user_id, trip_id))
         con.commit()
 
         it = cur.fetchone()
@@ -202,7 +200,7 @@ def checklist(trip_id):
             'name': data['name'],
             'quantity': data['quantity'],
             'section': data['section'],
-            'packed': data['packed']
+            'packed': False
         }
 
         return jsonify(item)
@@ -235,7 +233,7 @@ def checklist(trip_id):
 
 
 # Edit / see trip
-@app.route('/trip/<trip_id>', methods=['GET', 'PUT'])
+@app.route('/trip/<trip_id>', methods=['GET', 'PUT', 'DELETE'])
 def get_trip(trip_id):
     # TODO: userID
     user_id = 1
@@ -259,7 +257,7 @@ def get_trip(trip_id):
             'content': trip[5],
         }
         return jsonify(data)  # todo or error, if no trip / no authorization
-    else:  # PUT
+    elif request.method == 'PUT':
         data = request.json['data']
 
         cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s", [trip_id])
@@ -321,3 +319,20 @@ def get_trip(trip_id):
             'kind': trip[4]
         }
         return jsonify(data)
+
+    else:  # DELETE
+        cur.execute("SELECT usrID FROM trip WHERE tripID = %s", [trip_id])
+        trip = cur.fetchone()
+        if trip is None:
+            return jsonify(error="This trip does not exist"), 500  # TODO: error code?
+        if trip[0] != user_id:
+            return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
+
+        cur.execute("DELETE FROM trip WHERE tripID = %s RETURNING tripID", [trip_id])
+        con.commit()
+        trip = cur.fetchone()
+
+        if trip is None:
+            return jsonify(error="Trip could not be deleted"), 500
+
+        return redirect('http://localhost:3000/trips/', code=200)

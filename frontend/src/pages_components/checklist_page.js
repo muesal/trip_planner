@@ -51,7 +51,7 @@ function Checklists(props) {
         method: "post",
         url: `http://127.0.0.1:5000/checklist/${selectedTrip}`,
         data: {data},
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "application/json" },
       })
         .then((res) => {
           props.getData()

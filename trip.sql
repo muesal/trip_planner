@@ -69,7 +69,7 @@ CREATE TABLE item (
     quantity    INTEGER CHECK (quantity > 0),
     sectionID   INTEGER REFERENCES section,
     usrID       INTEGER REFERENCES usr,
-    tripID      INTEGER REFERENCES trip,
+    tripID      INTEGER REFERENCES trip ON DELETE CASCADE,
     packed      boolean
 );
 
