@@ -19,6 +19,7 @@ function Checklists(props) {
   const [data, setData] = useState();
   const [trips, setTrips] = useState(null);
   const [rows, setRows] = useState(null)
+  const [selectedTrip, setSelectedTrip] = useState(null)
   const apiData = props.apiData;
   const loading = props.loading;
   const [value, setValue] = useState(0);
@@ -42,20 +43,17 @@ function Checklists(props) {
 
   const handleSubmit = async () => {
 
-    if (data && data.rsName && data.rsCat) {
+    if (data && data.name && data.section && data.quantity) {
 
-      let bodyFormData = new FormData();
-      bodyFormData.append("rsName", data.rsName);
-      bodyFormData.append("rsCat", data.rsCat);
+      console.log(data)
 
       axios({
         method: "post",
-        url: "http://127.0.0.1:5000/add-resource",
-        data: bodyFormData,
+        url: `http://127.0.0.1:5000/checklist/${selectedTrip}`,
+        data: {data},
         headers: { "Content-Type": "multipart/form-data" },
       })
         .then((res) => {
-          console.log(res);
           props.getData()
         })
         .catch((err) => {
@@ -67,6 +65,7 @@ function Checklists(props) {
   }
 
   const getTrips = () => {
+
     axios({
       method: "get",
       url: "http://127.0.0.1:5000/trips",
@@ -74,6 +73,7 @@ function Checklists(props) {
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
+        setSelectedTrip(res.data[0].id)
         setTrips(res.data)
       })
       .catch((err) => {
@@ -131,7 +131,7 @@ function Checklists(props) {
         {trips &&
           trips.map((row) => {
             return (
-              <Tab label={row.name} {...a11yProps(row.id)} />
+              <Tab label={row.name} onClick={() => {setSelectedTrip(row.id)}} {...a11yProps(row.id)} />
             );
           })}
       </Tabs>
@@ -174,28 +174,6 @@ function Checklists(props) {
 
         <Button onClick={handleSubmit} style={{ margin: '1%' }} variant="outlined" color="default" >SUBMIT</Button>
 
-        {loading === true ? (
-          <div>
-            <h2>Loading...</h2>
-          </div>
-        ) : (
-          <section >
-            {apiData.map((rs) => {
-              const rsId = rs[0];
-              const rsName = rs[1];
-              const rsCat = rs[2];
-
-              return (
-                <div className="rs-container" key={String(rsId)}>
-                  <h2>{rsName}</h2>
-                  <p>
-                    <strong>Category:</strong> {rsCat}
-                  </p>
-                </div>
-              );
-            })}
-          </section>
-        )}
       </Box>
     </Box>
   );
