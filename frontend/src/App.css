@@ -95,3 +95,18 @@ h1{
     align-items: center;
     justify-content: space-evenly;
 }
+
+.checklistPage {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.checklistMenu {
+    width: 200px;
+}
+
+.Checklist {
+    width: 99%; 
+}
