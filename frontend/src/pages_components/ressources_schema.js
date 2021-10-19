@@ -4,7 +4,6 @@ export function updateSchemas(fields) {
         return false;
 
     let elements_tmp = []
-    let required_tmp = []
     let properties_tmp = {}
 
     for(let field of fields) {
@@ -13,15 +12,12 @@ export function updateSchemas(fields) {
             title: field.fieldName + " x" + field.fieldQuantity 
         };
 
-        required_tmp.push(field.fieldName)
-
         elements_tmp.push({
             type: "Control",
             scope: "#/properties/" + field.fieldName 
         })
     }
 
-    schema.required = required_tmp
     schema.properties = properties_tmp
     uiSchema.elements = elements_tmp
     
@@ -31,7 +27,7 @@ export function updateSchemas(fields) {
 
 export const schema = {
     type: "object",
-    required: [""],
+    required: [],
     properties: {
     
     }

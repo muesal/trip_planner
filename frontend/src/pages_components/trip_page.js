@@ -17,7 +17,7 @@ function Trip(props) {
 
     const [tripEditDialogOpen, setTripEditDialogOpen] = useState(false);
     const [days, setDays] = useState([])
-    const [data, setData] = useState()
+    const [data, setData] = useState({})
     const [selectedDay, setSelectedDay] = useState(0)
     const [selectedForm, setSelectedForm] = useState("")
     const [trip, setTrip] = useState(null)
@@ -57,6 +57,17 @@ function Trip(props) {
 
     const changeSchemas = (form) => {
         setFormOK(updateSchemas(form))
+
+        if(form) {
+            let data_tmp = data;
+            for(let field of form) {
+                if(field.fieldUsrName) {
+                    data_tmp[field.fieldName] = field.fieldUsrName
+                }
+            }
+            setData(data_tmp)
+        }   
+
     }
 
     const processCalendar = () => {
@@ -156,14 +167,15 @@ function Trip(props) {
                     
                     </div>
                     <div className="resourcesForm"> 
-                    { formOK && <JsonForms
-                        data={data}
-                        schema={schema}
-                        uischema={uiSchema}
-                        renderers={materialRenderers}
-                        onChange={({ data, errors }) => {setData(data);}}
-                        cells={materialCells}
-                    />}
+                        { formOK ? <JsonForms
+                            data={data}
+                            schema={schema}
+                            uischema={uiSchema}
+                            renderers={materialRenderers}
+                            onChange={({ data, errors }) => {setData(data);}}
+                            cells={materialCells}
+                        /> : 
+                        <p> The form is empty </p>}
                     </div> 
 
                     <div className="formChoice">
@@ -171,7 +183,7 @@ function Trip(props) {
                             Object.keys(fields[selectedDay]).map((form, index) => {
                             return (
                                 <div className="formButton" key={index}>
-                                    <Button onClick={() => {console.log(schema); console.log(uiSchema); setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button>
+                                    <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button>
                                 </div>          
                             );
                         })}
