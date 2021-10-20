@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request, redirect, url_for
 from flask_cors import CORS
 from dotenv import load_dotenv
 import psycopg2
@@ -114,11 +114,32 @@ def get_sections():
         counter += 1
     return jsonify(data)
 
+# return the checklist for the first trip
+@app.route('/checklist', methods=['GET'])
+def checklist_first():
+    # TODO: userID, hash trip id?
+    user_id = 1
+
+    # If the trip does not exist or the user is not participating return error
+    cur.execute(
+        '''SELECT t.tripID FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID 
+        WHERE t.finished IS NOT False
+        ORDER BY t.start_date LIMIT 1''',
+        [user_id])
+    trip = cur.fetchone()
+    if trip is None or not trip:
+        return jsonify(error="No unfinished trip found. Try reloading the page."), 400
+
+    return jsonify(trip[0])
+
+
 # return the checklist to the given trip for that user
 @app.route('/checklist/<trip_id>', methods=['GET', 'PUT', 'POST', 'DELETE'])
 def checklist(trip_id):
     # TODO: userID, hash trip id?
     user_id = 1
+    if trip_id is None:
+        return ""
 
     # If the trip does not exist or the user is not participating return error
     cur.execute("SELECT * FROM participates WHERE tripID = %s and usrID = %s", (trip_id, user_id))
@@ -128,15 +149,15 @@ def checklist(trip_id):
 
     if request.method == 'GET':
         # Get all items this user has for this trip, return them
-        cur.execute("SELECT i.itemID, i.name, i.quantity, s.name, i.packed FROM item i"
-                    "INNER JOIN section s ON s.sectionID = i.sectionID WHERE tripID = %s AND usrID = %s ",
+        cur.execute("SELECT i.itemID, i.name, i.quantity, s.name, i.packed FROM item i "
+                    "INNER JOIN section s ON s.sectionID = i.sectionID WHERE tripID = %s AND usrID = %s",
                     (trip_id, user_id))
         cl = cur.fetchall()
         data = []
         counter = 0
         for cl in cl:
             data.insert(counter, {
-                'id': cl[0],
+                'itemId': cl[0],
                 'name': cl[1],
                 'quantity': cl[2],
                 'section': cl[3],

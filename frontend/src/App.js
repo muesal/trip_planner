@@ -8,6 +8,7 @@ import Person from '@material-ui/icons/Person';
 import "./App.css";
 import Trips from "./pages_components/trips_page"
 import Checklist from "./pages_components/checklist_page"
+import Checklist_redirect from "./pages_components/checklist_redirect"
 import Account from "./pages_components/account_page";
 import Trip from "./pages_components/trip_page";
 
@@ -64,7 +65,7 @@ function App() {
                     </div>
 
                     <div className="menuButton">
-                        <Button component={Link} to="/checklists" variant="contained" color="primary">
+                        <Button component={Link} to="/checklist" variant="contained" color="primary">
                             Checklist
                         </Button>
                     </div>
@@ -87,7 +88,8 @@ function App() {
 
             <Switch>
                 <Route exact path={["/", "/trips"]} render={() => <Trips goToTrip={goToTrip}/>} />
-                <Route exact path={"/checklists"} render={() => <Checklist apiData={apiData} loading={loading} getData={getData}/>} />
+                <Route exact path={"/checklist/:id"} render={(matchProps) => <Checklist apiData={apiData} loading={loading} getData={getData} {...matchProps}/>} />
+                <Route exact path={"/checklist"} render={() => <Checklist_redirect apiData={apiData} loading={loading} getData={getData}/>} />
                 <Route exact path={"/account"} component={Account} />
                 <Route exact path={"/trip/:id"} render={(matchProps) => <Trip {...matchProps}/>}/>
             </Switch>
