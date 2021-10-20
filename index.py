@@ -82,6 +82,7 @@ def get_trips():
 # Return all kinds 
 @app.route('/kinds', methods=['GET'])
 def get_kinds():
+
     cur.execute(
         "SELECT * FROM kind k")
     kinds = cur.fetchall()
@@ -96,6 +97,22 @@ def get_kinds():
         counter += 1
     return jsonify(data)
 
+# Return all sections
+@app.route('/sections', methods=['GET'])
+def get_sections():
+    cur.execute(
+        "SELECT * FROM section s")
+    sections = cur.fetchall()
+
+    data = []
+    counter = 0
+    for section in sections:
+        data.insert(counter, {
+            'id': section[0],
+            'name': section[1],
+        })
+        counter += 1
+    return jsonify(data)
 
 # return the checklist to the given trip for that user
 @app.route('/checklist/<trip_id>', methods=['GET', 'PUT', 'POST', 'DELETE'])
@@ -341,6 +358,8 @@ def get_trip(trip_id):
 # Get form 
 @app.route('/forms/<trip_id>', methods=['GET', 'PUT'])
 def get_forms(trip_id):
+    user_id = 1
+
     if request.method == 'GET':
         cur.execute('''SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, i.name, i.quantity, s.name, i.usrID, i.packed, u.name
                         FROM form fo LEFT OUTER  JOIN field fi ON fo.formID = fi.formID 
@@ -376,5 +395,30 @@ def get_forms(trip_id):
             })
             counter += 1
         return jsonify(data)
-    #else:  # PUT
-        #TODO
+    else:  # PUT
+
+        data = request.json['fieldData']
+
+        cur.execute("SELECT sectionID FROM section WHERE name = %s", [f"{data['section']}"])
+        cur.execute( 
+            "INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) VALUES (%s, %s, %s, %s, %s, %s) "
+            "RETURNING itemID, packed",
+            (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
+        con.commit()
+
+        it = cur.fetchone()
+        item = {
+            'itemID': it[0],
+            'fieldID': None
+        }
+
+        cur.execute( 
+            "INSERT INTO field (formID, itemID, assigned) VALUES (%s, %s, %s)" 
+            "RETURNING fieldID",
+            (f"{data['formID']}", item['itemID'], 'False'))
+        con.commit()
+
+        fi = cur.fetchone()
+        item['fieldID'] = fi[0]
+
+        return jsonify(item)

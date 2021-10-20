@@ -10,6 +10,7 @@ import moment from 'moment'
 import { schema, uiSchema, updateSchemas } from './ressources_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { retrieveKinds } from './new_trip_schema'
+import { retrieveSections, schema as fieldSchema, uiSchema as fieldUiSchema } from './new_field_schema';
 import EditTripDialog from "./edit_trip_dialog"
 
 import axios from "axios";
@@ -25,11 +26,14 @@ function Trip(props) {
     const [trip, setTrip] = useState(null)
     const [fields, setFields] = useState()
     const [formOK, setFormOK] = useState(false)
+    const [addingField, setAddingField] = useState(false)
+    const [fieldData, setFieldData] = useState({})
 
     useEffect(() => {
         getTrip();
         getFields();
         retrieveKinds();
+        retrieveSections();
     }, [])
 
     useEffect(() => {
@@ -38,7 +42,7 @@ function Trip(props) {
     }, [trip]) 
 
     useEffect(() => {
-        
+        setAddingField(false)
         if(fields) {
             setSelectedForm(Object.keys(fields[selectedDay])[0])
             changeSchemas(fields[selectedDay][selectedForm])
@@ -46,6 +50,7 @@ function Trip(props) {
     }, [fields, selectedDay]) 
 
     useEffect(() => {
+        setAddingField(false)
         if(fields) 
             changeSchemas(fields[selectedDay][selectedForm]);
     }, [selectedForm]) 
@@ -71,6 +76,31 @@ function Trip(props) {
             setData(data_tmp)
         }   
 
+    }
+
+    const submitField = () => {
+       
+        let fieldData_tmp = fieldData
+        fieldData_tmp.formID = fields[selectedDay][selectedForm][0].formID
+        setFormOK(false)
+        if(fieldData && fieldData.name && fieldData.quantity && fieldData.section && fieldData.formID) {
+            axios({
+                    method: "put",
+                    url: "http://127.0.0.1:5000/forms/" + trip.id,
+                    data: {fieldData},  // TODO: add userID
+                    headers: { "Content-Type": "application/json" },
+                })
+                    .then((res) => {
+                        setAddingField(false)
+                        setFieldData({})
+                        getFields();
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+
+        }
+        
     }
 
     const processCalendar = () => {
@@ -179,7 +209,27 @@ function Trip(props) {
                             cells={materialCells}
                         /> : 
                         <p> The form is empty </p>}
-                    </div> 
+
+                        <div className="addFieldButton">
+                            <Button onClick={() => {setAddingField(true)}} variant="text" color="primary" >add field</Button>
+                        
+                            { addingField && 
+                                <>
+                                    <JsonForms
+                                        data={fieldData}
+                                        schema={fieldSchema}
+                                        uischema={fieldUiSchema}
+                                        renderers={materialRenderers}
+                                        onChange={({ data, errors }) => {setFieldData(data);}}
+                                        cells={materialCells}
+                                    /> 
+                                    
+                                    <Button onClick={submitField} variant="outlined" color="primary" >submit</Button>
+                                </>
+                            }
+                        
+                        </div>    
+                </div> 
 
                     <div className="formChoice">
                         {fields && 
