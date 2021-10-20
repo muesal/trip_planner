@@ -21,8 +21,6 @@ function Checklist(props) {
     const [rows, setRows] = useState(null)
     const [items, setItems] = useState(null)
     const [selectedTrip, setSelectedTrip] = useState(null)
-    const apiData = props.apiData;
-    const loading = props.loading;
     const [value, setValue] = useState(0);
 
     const handleChange = (event, newValue) => {

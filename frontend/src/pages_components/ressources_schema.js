@@ -1,5 +1,5 @@
 export function updateSchemas(fields) {
-
+        
     if(!fields || (fields.length === 1 && !fields[0].fieldID))
         return false;
 

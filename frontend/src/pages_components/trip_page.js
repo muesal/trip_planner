@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
-
 import React, { useState, useEffect } from 'react';
 import Button from '@material-ui/core/Button';
 import Box from '@mui/material/Box';
@@ -42,18 +41,44 @@ function Trip(props) {
     }, [trip]) 
 
     useEffect(() => {
-        setAddingField(false)
         if(fields) {
-            setSelectedForm(Object.keys(fields[selectedDay])[0])
-            changeSchemas(fields[selectedDay][selectedForm])
+            if(selectedForm === "")
+                setSelectedForm(Object.keys(fields[selectedDay])[0])
+
+            if(formOK)
+                setFormOK(false)
+            else 
+                changeSchemas(fields[selectedDay][selectedForm])
         }
-    }, [fields, selectedDay]) 
+    }, [fields]) 
 
     useEffect(() => {
         setAddingField(false)
-        if(fields) 
-            changeSchemas(fields[selectedDay][selectedForm]);
+        if(fields) {
+            setSelectedForm(Object.keys(fields[selectedDay])[0])
+            if(formOK)
+                setFormOK(false)
+            else 
+                changeSchemas(fields[selectedDay][selectedForm])
+            
+        }
+    }, [selectedDay]) 
+
+    useEffect(() => {
+        setAddingField(false)
+        if(fields) {
+            if(formOK)
+                setFormOK(false)
+            else 
+                changeSchemas(fields[selectedDay][selectedForm])
+        }
     }, [selectedForm]) 
+
+   useEffect(() => {
+        if(!formOK && fields) {
+            changeSchemas(fields[selectedDay][selectedForm])
+        }
+    }, [formOK])
 
     const handleOpen = () => {
         setTripEditDialogOpen(true)
@@ -64,6 +89,7 @@ function Trip(props) {
     }
 
     const changeSchemas = (form) => {
+
         setFormOK(updateSchemas(form))
 
         if(form) {
@@ -130,6 +156,7 @@ function Trip(props) {
                         
                         field_tmp[field.dayOfTrip][field.formName].push(field)
                     }
+
                     setFields(field_tmp)
                 })
                 .catch((err) => {
@@ -199,37 +226,45 @@ function Trip(props) {
                         })}
                     
                     </div>
-                    <div className="resourcesForm"> 
-                        { formOK ? <JsonForms
-                            data={data}
-                            schema={schema}
-                            uischema={uiSchema}
-                            renderers={materialRenderers}
-                            onChange={({ data, errors }) => {setData(data);}}
-                            cells={materialCells}
-                        /> : 
-                        <p> The form is empty </p>}
 
-                        <div className="addFieldButton">
-                            <Button onClick={() => {setAddingField(true)}} variant="text" color="primary" >add field</Button>
-                        
-                            { addingField && 
-                                <>
-                                    <JsonForms
-                                        data={fieldData}
-                                        schema={fieldSchema}
-                                        uischema={fieldUiSchema}
-                                        renderers={materialRenderers}
-                                        onChange={({ data, errors }) => {setFieldData(data);}}
-                                        cells={materialCells}
-                                    /> 
-                                    
-                                    <Button onClick={submitField} variant="outlined" color="primary" >submit</Button>
-                                </>
-                            }
-                        
-                        </div>    
-                </div> 
+                    <div className="form">  
+                        <div className="formTitle">
+                            {selectedForm &&
+                                <h2> {days[selectedDay]} - {selectedForm}</h2>}
+                        </div>  
+
+                        <div className="resourcesForm"> 
+                            { formOK ? <JsonForms
+                                data={data}
+                                schema={schema}
+                                uischema={uiSchema}
+                                renderers={materialRenderers}
+                                onChange={({ data, errors }) => {setData(data);}}
+                                cells={materialCells}
+                            /> : 
+                            <p> The form is empty </p>}
+
+                            <div className="addFieldButton">
+                                <Button onClick={() => {setAddingField(true)}} variant="text" color="primary" >add field</Button>
+                            
+                                { addingField && 
+                                    <>
+                                        <JsonForms
+                                            data={fieldData}
+                                            schema={fieldSchema}
+                                            uischema={fieldUiSchema}
+                                            renderers={materialRenderers}
+                                            onChange={({ data, errors }) => {setFieldData(data);}}
+                                            cells={materialCells}
+                                        /> 
+                                        
+                                        <Button onClick={submitField} variant="outlined" color="primary" >submit</Button>
+                                    </>
+                                }
+                            
+                            </div>   
+                        </div> 
+                    </div> 
 
                     <div className="formChoice">
                         {fields && 
