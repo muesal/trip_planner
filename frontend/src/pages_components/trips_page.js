@@ -115,7 +115,6 @@ function Main(props) {
     </Grid>
 
   );
-
 }
 
 export default Main
