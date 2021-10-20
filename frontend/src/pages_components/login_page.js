@@ -3,6 +3,11 @@ import Box from '@mui/material/Box';
 import { Button, Container, Grid, TextField, Typography } from "@mui/material";
 import axios from 'axios';
 import { Link } from "react-router-dom";
+import Alert from '@mui/material/Alert';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
+import { Redirect } from "react-router";
 
 class Login extends Component {
 
@@ -11,13 +16,16 @@ class Login extends Component {
     this.state = {
       emailForm: "",
       passwordForm: "",
-      emailValid: true,
-      passValid: true,
+      alert: false,
+      alertText: "",
+      alertType: "",
+      redirect: false
     }
   }
 
 
-  async handleLogin() {
+  handleLogin = async (e) => {
+    e.preventDefault();
     var email = this.state.emailForm;
     var password = this.state.passwordForm;
     var userData = {
@@ -32,22 +40,34 @@ class Login extends Component {
     axios({
       method: "post",
       url: "http://localhost:5000/login",
-      withCredentials: true,
       headers: { "Content-Type": "application/json" },
       data: JSON.stringify(credentials),
     })
       .then((response) => {
-        console.log(response.data);
-        return response.data;
+        if (response.data.error) {
+          this.setState({ alertText: response.data.error });
+          this.setState({ alert: true });
+          this.setState({ alertType: "error" });
+        }
+        if (response.data.msg) {
+          this.setState({ alertText: response.data.msg });
+          this.setState({ alert: true })
+          this.setState({ alertType: "success" });
+          setTimeout(() => {
+            this.setState({ redirect: true });
+          }, 2000);
+        }
       })
       .catch((err) => {
         console.log(err);
       });
-
   }
 
 
   render() {
+    if (this.state.redirect) {
+      return <Redirect to={'/account'}></Redirect>;
+    }
 
     return (
       <Container component="main" maxWidth="xs">
@@ -79,8 +99,6 @@ class Login extends Component {
                   variant="outlined"
                   label="Email"
                   onChange={e => this.setState({ emailForm: e.target.value })}
-                  error={!this.state.emailValid}
-                  helperText={!this.state.emailValid ? "You must use a valid email." : ""}
                 />
               </Grid>
               <Grid item >
@@ -89,20 +107,18 @@ class Login extends Component {
                   label="Password"
                   type="password"
                   onChange={e => this.setState({ passwordForm: e.target.value })}
-                  error={!this.state.passValid}
-                  helperText={!this.state.passValid ? "Your password is too weak." : ""}
                 />
               </Grid>
               <Grid container item>
-                <Grid xs>
-                  <Link to={{pathname: "/signin"}}>Sign in</Link>
+                <Grid item xs>
+                  <Link to={{ pathname: "/signin" }}>Sign in</Link>
                 </Grid>
-                <Grid xs></Grid>
-                <Grid xs>
+                <Grid item xs></Grid>
+                <Grid item xs>
                   <Button
                     type="button"
                     variant="contained"
-                    onClick={this.handleChanges}
+                    onClick={this.handleLogin}
                   >
                     Login
                   </Button>
@@ -110,6 +126,27 @@ class Login extends Component {
               </Grid>
             </Grid>
           </Box>
+        </Box>
+        <Box sx={{ mt: "2vh" }}>
+          <Collapse in={this.state.alert}>
+            <Alert severity={this.state.alertType || "warning"}
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={() => {
+                    this.setState({ alert: false });
+                  }}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </IconButton>
+              }
+              sx={{ mb: 2 }}
+            >
+              {this.state.alertText}
+            </Alert>
+          </Collapse>
         </Box>
       </Container>
     );

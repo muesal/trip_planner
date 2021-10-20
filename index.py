@@ -96,21 +96,21 @@ def get_kinds():
         counter += 1
     return jsonify(data)
 
-# Login if passwd is users[0][3]:
+# Login 
 @app.route('/login', methods=['POST'])
 def login():
+    email = request.json['email']
+    passwd = request.json['password']
     cur.execute(
-        "SELECT * FROM kind k")
-    kinds = cur.fetchall()
-
-    data = []
-    counter = 0
-    for kind in kinds:
-        data.insert(counter, {
-            'id': kind[0],
-            'name': kind[1],
-        })
-        counter += 1
+        "SELECT * FROM usr WHERE email = %s",(email,))
+    users = cur.fetchall()
+    if not users:
+        data = {'error': "Email or password is incorrect."}
+    else:
+      if (passwd == users[0][3]):
+        data = {'msg': "You login succesfully. Redirecting to your account page."}
+      else:
+        data = {'error': "Email or password is incorrect."}    
     return jsonify(data)
 
 # Signin

@@ -92,12 +92,10 @@ class Signin extends Component {
             this.setState({ redirect: true});
           }, 2000); 
         }
-
       })
       .catch((err) => {
         console.log(err);
       });
-
   }
 
   render() {
