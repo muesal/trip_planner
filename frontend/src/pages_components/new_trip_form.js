@@ -21,7 +21,7 @@ function NewTripForm(props) {
 
         data.start = moment(data.start, "YYYY-MM-DD").format("YYYY/MM/DD")
         
-        if(data && data.name && data.content && data.duration && data.location && data.start && data.tKind) {
+        if(data && data.name && data.content && data.duration && data.location && data.start && data.kind) {
 
 
             let bodyFormData = new FormData();
@@ -30,7 +30,7 @@ function NewTripForm(props) {
             bodyFormData.append("duration", data.duration);
             bodyFormData.append("location", data.location);
             bodyFormData.append("start", data.start);
-            bodyFormData.append("tKind", data.tKind);
+            bodyFormData.append("kind", data.kind);
 
             axios({
                 method: "post",

@@ -9,7 +9,9 @@ import { JsonForms } from '@jsonforms/react';
 import moment from 'moment'
 import { schema, uiSchema, updateSchemas } from './ressources_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
+import { retrieveKinds } from './new_trip_schema'
 import EditTripDialog from "./edit_trip_dialog"
+
 import axios from "axios";
 
 
@@ -27,6 +29,7 @@ function Trip(props) {
     useEffect(() => {
         getTrip();
         getFields();
+        retrieveKinds();
     }, [])
 
     useEffect(() => {
@@ -128,7 +131,7 @@ function Trip(props) {
                     <Button onClick={handleOpen} variant="contained" color="inherit" >Edit Trip</Button>
 
                     {tripEditDialogOpen && 
-                        <EditTripDialog handleClose={handleClose} trip={trip} />}
+                        <EditTripDialog handleClose={handleClose} trip={trip} getTrip={getTrip} />}
                 </div>
 
                 <div className="tripDetails">

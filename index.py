@@ -36,7 +36,7 @@ def add_trip():
     data = request.form.to_dict()
     # TODO: get user id
     user_id = 1
-    cur.execute("SELECT kindID FROM kind WHERE name = %s", [f"{data['tKind']}"])
+    cur.execute("SELECT kindID FROM kind WHERE name = %s", [f"{data['kind']}"])
     cur.execute("SELECT create_trip (%s, %s, %s, TO_DATE(%s,'YYYY/MM/DD'), %s, %s, %s)",
                 (f"{data['name']}", user_id, cur.fetchone()[0], f"{data['start']}", f"{data['duration']}",
                  f"{data['location']}", f"{data['content']}"))
@@ -275,7 +275,7 @@ def get_trip(trip_id):
         if data['location'] is None:
             data['location'] = trip[5]
 
-        cur.execute("UPDATE trip SET (name, start_date, location, content) = (%s, TO_DATE(%s, 'DD/MM/YYYY'), "
+        cur.execute("UPDATE trip SET (name, start_date, location, content) = (%s, TO_DATE(%s, 'YYYY/MM/DD'), "
                     "%s, %s) WHERE tripID = %s RETURNING start_date, duration, location, content, kindID",
                     (f"{data['name']}", f"{data['start']}", f"{data['location']}", f"{data['content']}", trip_id))
         trip = cur.fetchone()

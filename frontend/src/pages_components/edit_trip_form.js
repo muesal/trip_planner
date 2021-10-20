@@ -17,18 +17,26 @@ function EditTripForm(props) {
     }
 
     const saveChanges = () => {
-        axios({
-                method: "put",
-                url: "http://127.0.0.1:5000/trip/" + props.trip.id,
-                data: {data},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
-            })
-                .then((res) => {
-                    console.log(res);
+
+        if(data && data.name && data.content && data.duration && data.location && data.start && data.kind) {
+            console.log("TEST")
+            data.start = moment(data.start, "YYYY-MM-DD").format("YYYY/MM/DD")
+            axios({
+                    method: "put",
+                    url: "http://127.0.0.1:5000/trip/" + props.trip.id,
+                    data: {data},  // TODO: add userID
+                    headers: { "Content-Type": "application/json" },
                 })
-                .catch((err) => {
-                    console.log(err);
-                });
+                    .then((res) => {
+                        console.log(res);
+                        props.getTrip();
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+
+        }
+
         props.handleClose();
     }
 
@@ -50,9 +58,9 @@ function EditTripForm(props) {
     }
 
     useEffect(() => {
-        console.log(props.trip)
-        props.trip.start = moment(props.trip.start).format("DD/MM/YYYY")
-        setData(props.trip)
+        let trip_tmp = props.trip
+        trip_tmp.start = moment(props.trip.start).format("YYYY-MM-DD")
+        setData(trip_tmp)
     }, [props.trip])
 
     return (

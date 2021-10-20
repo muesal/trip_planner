@@ -13,7 +13,7 @@ export async function retrieveKinds() {
                 for(let kind of res.data)
                     kinds.push(kind.name)
 
-                schema.properties.tKind.enum = kinds
+                schema.properties.kind.enum = kinds
             })
             .catch((err) => {
                 console.log(err);
@@ -45,7 +45,7 @@ export const schema = {
             type: "integer",
             title: "Duration",
         }, 
-        tKind: {
+        kind: {
             type: "string",
             title: "Kind",
             enum: [""]
@@ -79,7 +79,7 @@ export const uiSchema = {
                 }, 
                 {
                     type: "Control",
-                    scope: "#/properties/tKind",
+                    scope: "#/properties/kind",
                 }
             ]
 
