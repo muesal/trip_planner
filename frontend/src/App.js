@@ -15,94 +15,119 @@ import Trip from "./pages_components/trip_page";
 import { useHistory } from "react-router-dom";
 import Login from './pages_components/login_page';
 import Signin from './pages_components/signin_page';
+import Home from './pages_components/home_page';
 
 function App() {
 
-    const [apiData, setApiData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const history = useHistory();
+  const [apiData, setApiData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [logged, setLogged] = useState(false);
+  const history = useHistory();
 
-    useEffect(() => {
-        getData();
-    }, []);
+  useEffect(() => {
+    getData();
+  }, []);
 
-    const getData = () => {
-        const API = 'http://127.0.0.1:5000/';
+  const loggedHandler = (loged) => {
+    setLogged(loged)
+  }
 
-        setLoading(true)
-        /*fetch(API)
-            .then((response) => {
-                console.log(response);
-                return response.json();
-            })
-            .then((data) => {
-                console.log(data);
-                setLoading(false);
-                setApiData(data);
-            });*/
-        
-    };
+  const getData = () => {
+    const API = 'http://127.0.0.1:5000/';
 
-    const goToTrip = (trip) => {
-        history.push(`/trip/${trip}`);
-    }
+    setLoading(true)
+    /*fetch(API)
+        .then((response) => {
+            console.log(response);
+            return response.json();
+        })
+        .then((data) => {
+            console.log(data);
+            setLoading(false);
+            setApiData(data);
+        });*/
 
-    return (
+  };
 
-        <div className="App">
+  const goToTrip = (trip) => {
+    history.push(`/trip/${trip}`);
+  }
 
-            <header>
-                                        
-                <div className="menuTitle"> 
-                    <h1>
-                        UTRIP 
-                    </h1>
-                </div>
+  return (
 
-                <div className="menuButtons">
-                    <div className="menuButton">
-                        <Button component={Link} to="/trips" variant="contained" color="primary">
-                            Trips
-                        </Button>
-                    </div>
-
-                    <div className="menuButton">
-                        <Button component={Link} to="/checklist" variant="contained" color="primary">
-                            Checklist
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="accountButton">
-                    <div className="accountIcon">
-                        <Person>
-                            Account Icon
-                        </Person>
-                    </div>
-                    <div className="menuButton">
-                        <Button style={{ fontSize: '18px' }} component={Link} to="/account" variant="text" color="inherit">
-                            My Account
-                        </Button>
-                    </div>
-                </div>
-                    
-            </header>  
-
-            <Switch>
-                <Route exact path={["/", "/trips"]} render={() => <Trips goToTrip={goToTrip}/>} />
-                <Route exact path={"/checklist/:id"} render={(matchProps) => <Checklist apiData={apiData} loading={loading} getData={getData} {...matchProps}/>} />
-                <Route exact path={"/checklist"} render={() => <ChecklistRedirect apiData={apiData} loading={loading} getData={getData}/>} />
-                <Route exact path={"/account"} component={Account} />
-                <Route exact path={"/trip/:id"} render={(matchProps) => <Trip {...matchProps}/>}/>
-                <Route exact path={"/login"} component={Login} />
-                <Route exact path={"/signin"} component={Signin} />
-            </Switch>
-
+    <div className="App">
+      <header>
+        <div className="menuTitle">
+          <h1>
+            UTRIP
+          </h1>
         </div>
+        {logged ? (
+          <div className="menuButtons">
+            <div className="menuButton">
+              <Button component={Link} to="/home" variant="contained" color="primary">
+                Home
+              </Button>
+            </div>
+            <div className="menuButton">
+              <Button component={Link} to="/trips" variant="contained" color="primary">
+                Trips
+              </Button>
+            </div>
 
-        
-        
-    );
+            <div className="menuButton">
+              <Button component={Link} to="/checklists" variant="contained" color="primary">
+                Checklist
+              </Button>
+            </div>
+          </div>) : (
+          <div className="menuButtons">
+            <div className="menuButton">
+              <Button component={Link} to="/home" variant="contained" color="primary">
+                Home
+              </Button>
+            </div>
+          </div>
+        )}
+        {logged ? (
+          <div className="accountButton">
+            <div className="menuButton">
+              <Button component={Link} to="/account" variant="text" color="inherit">
+                <Person>
+                  Account Icon
+                </Person>
+                My Account
+              </Button>
+            </div>
+          </div>) : (
+          <div className="accountButton">
+            <div className="menuButton">
+              <Button component={Link} to="/signin" variant="contained" color="primary">
+                Sign in
+              </Button>
+            </div>
+            <div className="menuButton">
+              <Button component={Link} to="/login" variant="contained" color="primary">
+                Log in
+              </Button>
+            </div>
+          </div>
+        )
+        }
+
+      </header>
+
+      <Switch>
+        <Route exact path={["/", "/home"]} render={() => <Home />} />
+        <Route exact path={"/login"} render={() => <Login loggedHandler={loggedHandler} />} />
+        <Route exact path={"/signin"} render={() => <Signin loggedHandler={loggedHandler} />} />
+        <Route exact path={"/trips"} render={() => <Trips goToTrip={goToTrip} />} />
+        <Route exact path={"/checklists"} render={() => <Checklist apiData={apiData} loading={loading} getData={getData} />} />
+        <Route exact path={"/account"} component={Account} />
+        <Route exact path={"/trip/:id"} render={(matchProps) => <Trip {...matchProps} />} />
+      </Switch>
+    </div>
+  );
 };
 
 export default App;
