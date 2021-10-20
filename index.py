@@ -96,6 +96,42 @@ def get_kinds():
         counter += 1
     return jsonify(data)
 
+# Login if passwd is users[0][3]:
+@app.route('/login', methods=['POST'])
+def login():
+    cur.execute(
+        "SELECT * FROM kind k")
+    kinds = cur.fetchall()
+
+    data = []
+    counter = 0
+    for kind in kinds:
+        data.insert(counter, {
+            'id': kind[0],
+            'name': kind[1],
+        })
+        counter += 1
+    return jsonify(data)
+
+# Signin
+@app.route('/signin', methods=['POST'])
+def signin():
+    username = request.json['username']
+    email = request.json['email']
+    passwd = request.json['password']
+    cur.execute(
+        "SELECT * FROM usr WHERE email = %s",(email,))
+    users = cur.fetchall()
+    
+    if users:
+        data = {'error': "The email already exist."}
+    else:
+      cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
+      con.commit()
+      data = {'msg': "You signin succesfully. Redirecting to your account page."}  
+    return jsonify(data)
+
+
 
 # return the checklist to the given trip for that user
 @app.route('/checklist/<trip_id>', methods=['GET', 'PUT', 'POST', 'DELETE'])
