@@ -83,11 +83,45 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- assign a usr to a field
 CREATE OR REPLACE FUNCTION assign_field (usr int, fld int) returns void AS $$
 DECLARE
     itm INTEGER;
 BEGIN
     UPDATE field SET assigned = TRUE WHERE fieldID = fld RETURNING itemID INTO itm;
-    UPDATE item SET packed = false, usrID = usr WHERE itemID = itm;
+    UPDATE item SET (packed, usrID) = (false, usr) WHERE itemID = itm;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Delete a user. Unset it from all assigned items
+CREATE OR REPLACE FUNCTION delete_usr (user_ int) returns void AS $$
+DECLARE
+    itm INTEGER;
+    trp INTEGER;
+    trp_u record;
+BEGIN
+    -- unassign fields
+    FOR itm in SELECT itemID FROM item WHERE usrID = user_ loop
+        UPDATE field SET assigned = false WHERE itemID = itm;
+        IF FOUND THEN
+            UPDATE item SET (usrID, packed) = (Null, False) WHERE itemID = itm;
+        end if;
+    end loop;
+
+
+    -- reassign / delete trip
+    DELETE FROM participates WHERE usrID = user_;
+
+    FOR trp in SELECT tripID FROM trip WHERE usrID = user_ loop
+        SELECT usrID FROM participates WHERE tripID = trp LIMIT 1 INTO trp_u;
+
+        IF NOT FOUND THEN
+            DELETE FROM TRIP WHERE tripID = trp;
+        ELSE
+            UPDATE trip SET usrID = trp_u.usrID WHERE tripID = trp;
+        end if;
+    end loop;
+
+    DELETE FROM usr WHERE usrID = user_;
 END;
 $$ LANGUAGE plpgsql;

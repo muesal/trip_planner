@@ -123,7 +123,7 @@ def get_sections():
     con = connect()
     cur = con.cursor()
 
-    cur.execute("SELECT * FROM section s;")
+    cur.execute("SELECT SectionID, name FROM section s;")
     sections = cur.fetchall()
 
     response = []
@@ -175,7 +175,7 @@ def checklist(trip_id):
     user_id = 1  # TODO: userID, hash trip id?
 
     # If the trip does not exist or the user is not participating return error
-    cur.execute("SELECT * FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, user_id))
+    cur.execute("SELECT tripID FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, user_id))
     up = cur.fetchall()
     if up is None:
         cur.close()
@@ -476,7 +476,7 @@ def get_forms(trip_id):
         if forms is None:
             cur.close()
             con.close()
-            return () # TODO: return error message
+            return ()  # TODO: return error message
 
         response = []
         counter = 0
@@ -496,7 +496,7 @@ def get_forms(trip_id):
             })
             counter += 1
 
-    else:  # PUT
+    else:  # PUT TODO: Shouldn't it be POST?
 
         data = request.json['fieldData']
 
@@ -520,6 +520,74 @@ def get_forms(trip_id):
 
         fi = cur.fetchone()
         response['fieldID'] = fi[0]
+
+    cur.close()
+    con.close()
+    return jsonify(response)
+
+
+# GET / Update / Delete the account of the user
+@app.route('/account', methods=['GET', 'PUT', 'DELETE'])
+def profile():
+    con = connect()
+    cur = con.cursor()
+
+    user_id = 1  # TODO: userID, hash trip id?
+
+    # If the trip does not exist or the user is not participating return error
+    cur.execute("SELECT name, email FROM usr WHERE usrID = %s;", [user_id])
+    user = cur.fetchall()
+    if user is None:
+        cur.close()
+        con.close()
+        return jsonify(error="User not found"), 400
+
+    if request.method == 'GET':
+        response = {
+            'userId': user[0],
+            'name': user[1],
+            'email': user[2]
+        }
+
+    elif request.method == 'PUT':
+        # Update the user (name, email, password?)
+        data = request.json['data']
+
+        # check that all fields are correct / filled
+        if data['name'] is None:
+            data['name'] = user[0]
+        if data['email'] is None:
+            data['email'] = user[1]
+
+        # TODO: password?
+
+        cur.execute("UPDATE usr SET (name, email) = (%s, %s) WHERE usrID = %s "
+                    "RETURNING name, email;",
+                    (f"{data['name']}", f"{data['email']}", user_id))
+        con.commit()
+
+        u = cur.fetchone()
+        response = {
+            'id': user_id,
+            'name': u[0],
+            'email': u[1]
+        }
+
+    else:  # DELETE
+        # Delete the user
+
+        # delete user
+        cur.execute("SELECT delete_usr(%s);", [user_id])
+        con.commit()
+        u = cur.fetchone()
+
+        cur.close()
+        con.close()
+
+        if u is None:
+            return jsonify(error="User could not be deleted"), 500  # TODO: error code?
+
+        return redirect('http://localhost:3000/', code=200)
 
     cur.close()
     con.close()
