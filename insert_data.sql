@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------------------------------------------------
 -- Insert default data (kind, kindField, section, topic)
 ------------------------------------------------------------------------------------------------------------------------
-INSERT INTO kind (kindID, name) VALUES (1, 'hiking'), (2, 'climbing'), (3, 'scubadiving'), (4, 'other');
+INSERT INTO kind (kindID, name) VALUES (1, 'other'), (2, 'hiking'), (3, 'climbing'), (4, 'scubadiving');
 
 INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food');
 
