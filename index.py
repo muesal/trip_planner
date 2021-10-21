@@ -29,7 +29,7 @@ def connect():
 
 @app.route('/')
 def home():
-    return redirect('http://localhost:3000/trips/', code=200)
+    return ''
 
 
 # Create a new trip.
@@ -38,9 +38,9 @@ def add_trip():
     con = connect()
     cur = con.cursor()
 
+    user_id = 1  # TODO: get user id
     data = request.form.to_dict()
-    # TODO: get user id
-    user_id = 1
+
     cur.execute("SELECT kindID FROM kind WHERE name = %s;", [f"{data['kind']}"])
     cur.execute("SELECT create_trip (%s, %s, %s, TO_DATE(%s,'YYYY/MM/DD'), %s, %s, %s);",
                 (f"{data['name']}", user_id, cur.fetchone()[0], f"{data['start']}", f"{data['duration']}",
@@ -48,11 +48,10 @@ def add_trip():
     created_trip = cur.fetchone()[0]
     con.commit()
 
-    if created_trip is None:
-        return jsonify(error="Data could not be saved"), 500
-
     cur.close()
     con.close()
+    if created_trip is None:
+        return jsonify(error="Data could not be saved"), 500
 
     return redirect('http://localhost:3000/trip/' + str(created_trip), code=200)
 
@@ -63,7 +62,7 @@ def get_trips():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1 # TODO: get user id: session['id']?
+    user_id = 1  # TODO: get user id: session['id']?
 
     cur.execute("SELECT t.tripID, t.name, k.name, t.start_date, t.duration, t.location, t.content "
                 "FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
@@ -73,10 +72,10 @@ def get_trips():
                 [user_id])
     trips = cur.fetchmany(size=5)
 
-    data = []
+    response = []
     counter = 0
     for trip in trips:
-        data.insert(counter, {
+        response.insert(counter, {
             'id': trip[0],
             'name': trip[1],
             'kind': trip[2],
@@ -89,7 +88,7 @@ def get_trips():
 
     cur.close()
     con.close()
-    return jsonify(data)
+    return jsonify(response)
 
 
 # Return all kinds 
@@ -104,10 +103,10 @@ def get_kinds():
     # If no kinds were found return only 'other'
     if not kinds:
         kinds = [['0', 'other']]
-    data = []
+    response = []
     counter = 0
     for kind in kinds:
-        data.insert(counter, {
+        response.insert(counter, {
             'id': kind[0],
             'name': kind[1],
         })
@@ -115,7 +114,7 @@ def get_kinds():
 
     cur.close()
     con.close()
-    return jsonify(data)
+    return jsonify(response)
 
 
 # Return all sections
@@ -127,10 +126,10 @@ def get_sections():
     cur.execute("SELECT * FROM section s;")
     sections = cur.fetchall()
 
-    data = []
+    response = []
     counter = 0
     for section in sections:
-        data.insert(counter, {
+        response.insert(counter, {
             'id': section[0],
             'name': section[1],
         })
@@ -138,7 +137,7 @@ def get_sections():
 
     cur.close()
     con.close()
-    return jsonify(data)
+    return jsonify(response)
 
 
 # return the checklist for the first trip
@@ -149,17 +148,18 @@ def checklist_first():
 
     user_id = 1  # TODO: userID, hash trip id?
 
-    # If the trip does not exist or the user is not participating return error
+    # Get the id of the first trip of the user
     cur.execute("SELECT t.tripID FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
                 "WHERE t.finished IS NOT False "
-                "ORDER BY t.start_date LIMIT 1;",
+                "ORDER BY (t.start_date, t.tripID) LIMIT 1;",
                 [user_id])
     trip = cur.fetchone()
-    if trip is None or not trip:
-        return jsonify(error="No unfinished trip found. Try reloading the page."), 400
 
     cur.close()
     con.close()
+    if trip is None or not trip:
+        return jsonify(error="No unfinished trip found. Try reloading the page."), 400
+
     return jsonify(trip[0])
 
 
@@ -178,6 +178,8 @@ def checklist(trip_id):
     cur.execute("SELECT * FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, user_id))
     up = cur.fetchall()
     if up is None:
+        cur.close()
+        con.close()
         return jsonify(error="Trip not found"), 400  # TODO: Differ between trip not found / user not participating?
 
     if request.method == 'GET':
@@ -210,6 +212,8 @@ def checklist(trip_id):
                     (f"{data['item']}", user_id, trip_id))
         item = cur.fetchone()
         if item is None:
+            cur.close()
+            con.close()
             return jsonify(error="This item could not be found"), 500  # TODO: error code?
 
         # check that all fields are correct / filled
@@ -284,25 +288,30 @@ def checklist(trip_id):
                     (data['id'], user_id, trip_id))
         item = cur.fetchone()
         if item is None:
+            cur.close()
+            con.close()
             return jsonify(error="This item could not be found"), 500  # TODO: error code?
 
         cur.execute("SELECT fieldID FROM field WHERE itemID = %s;", [f"{data['item']}"])
-        field = cur.fetchone
+        field = cur.fetchone()
         if field is None:
             # Delete the item, if it is a personal item (no respective field)
             cur.execute("DELETE FROM item WHERE itemID = %s RETURNING itemID;", [f"{data['item']}"])
         else:
             # otherwise un-assign the user from this item
             cur.execute("UPDATE field SET assigned = False WHERE fieldID = %s RETURNING fieldID;", (field[0]))
-            if cur.fetchone is not None:
+            if cur.fetchone() is not None:
                 cur.execute("UPDATE item SET (usrID , packed) = (Null, False) WHERE itemID = %s RETURNING itemID;",
                             f"{data['item']}")
-        it = cur.fetchone
-        if it is None:
-            return jsonify(error="Item could not be deleted"), 500  # TODO: error code?
+        con.commit()
+        it = cur.fetchone()
 
         cur.close()
         con.close()
+
+        if it is None:
+            return jsonify(error="Item could not be deleted"), 500  # TODO: error code?
+
         return redirect('http://localhost:3000/checklist/' + str(trip_id), code=200)
 
     cur.close()
@@ -327,6 +336,8 @@ def get_trip(trip_id):
                     [trip_id])
         trip = cur.fetchone()
         if trip is None:
+            cur.close()
+            con.close()
             return jsonify(error="This trip does not exist"), 500  # TODO: error code?
 
         response = {
@@ -345,8 +356,12 @@ def get_trip(trip_id):
         cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s;", [trip_id])
         trip = cur.fetchone()
         if trip is None:
+            cur.close()
+            con.close()
             return jsonify(error="This trip does not exist"), 500  # TODO: error code?
         if trip[0] != user_id:
+            cur.close()
+            con.close()
             return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
         # check that all fields are correct / filled
@@ -360,37 +375,46 @@ def get_trip(trip_id):
         cur.execute("UPDATE trip SET (name, start_date, location, content) = (%s, TO_DATE(%s, 'YYYY/MM/DD'), "
                     "%s, %s) WHERE tripID = %s RETURNING start_date, duration, location, content, kindID;",
                     (f"{data['name']}", f"{data['start']}", f"{data['location']}", f"{data['content']}", trip_id))
-        trip = cur.fetchone()
         con.commit()
+        trip = cur.fetchone()
 
         if trip is None:
+            cur.close()
+            con.close()
             return jsonify(error="Updated data could not be saved"), 500
 
         # If the duration changes, the fields of the trip must be adapted
         if data['duration'] is not None:
             data['duration'] = int(float(data['duration']))  # assure that the value is an integer
             duration = int(trip[1])
-            if duration > data['duration'] > 0:
-                cur.execute("SELECT decrease_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
-                con.commit()
-                update = cur.fetchone()
-                # TODO: check if worked.
-            if data['duration'] > duration:
-                cur.execute("SELECT increase_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
-                con.commit()
-                update = cur.fetchone()
-                # TODO: check if worked.
+            if duration != data['duration']:
+                if duration > data['duration']:
+                    cur.execute("SELECT decrease_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
+                    con.commit()
+                    update = cur.fetchone()
+
+                else:  # data['duration'] > duration:
+                    cur.execute("SELECT increase_duration(%s, %s, %s)", (f"{data['duration']}", duration, trip_id))
+                    con.commit()
+                    update = cur.fetchone()
+
+                if update is None:
+                    cur.close()
+                    con.close()
+                    return jsonify(error="Updated data could not be saved"), 500
 
         # If the kind changed, the fields of the new kind must be added
-
         if data['kind'] is not None:
             cur.execute("SELECT kindID FROM kind WHERE name = %s;", [f"{data['kind']}"])
             kind = cur.fetchone()
             if kind is not None and kind[0] != trip[4]:
-                cur.execute("SELECT set_kind(%s, %s)", (kind, trip_id))
+                cur.execute("SELECT set_kind(%s, %s);", (kind, trip_id))
                 con.commit()
                 update = cur.fetchone()
-                # TODO: check if worked
+                if update is None:
+                    cur.close()
+                    con.close()
+                    return jsonify(error="Updated data could not be saved"), 500
 
         response = {
             'id': trip_id,
@@ -405,14 +429,20 @@ def get_trip(trip_id):
         cur.execute("SELECT usrID FROM trip WHERE tripID = %s;", [trip_id])
         trip = cur.fetchone()
         if trip is None:
+            cur.close()
+            con.close()
             return jsonify(error="This trip does not exist"), 500  # TODO: error code?
         if trip[0] != user_id:
+            cur.close()
+            con.close()
             return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
         cur.execute("DELETE FROM trip WHERE tripID = %s RETURNING tripID;", [trip_id])
         con.commit()
         trip = cur.fetchone()
 
+        cur.close()
+        con.close()
         if trip is None:
             return jsonify(error="Trip could not be deleted"), 500
 
@@ -432,19 +462,21 @@ def get_forms(trip_id):
     user_id = 1  # TODO: user ID
 
     if request.method == 'GET':
-        cur.execute(
-            "SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, i.name, i.quantity, s.name, i.usrID, i.packed, u.name "
-            "FROM form fo LEFT OUTER  JOIN field fi ON fo.formID = fi.formID "
-            "LEFT OUTER JOIN item i ON i.itemID = fi.itemID "
-            "LEFT OUTER JOIN section s ON s.sectionID = i.sectionID "
-            "LEFT OUTER JOIN usr u ON u.usrID = i.usrID "
-            "WHERE fo.tripID = %s "
-            "ORDER BY fo.formID, fo.formID, fi.fieldID;",
-            [trip_id])
+        cur.execute("SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, i.name, i.quantity, s.name, i.usrID, "
+                    "i.packed, u.name "
+                    "FROM form fo LEFT OUTER  JOIN field fi ON fo.formID = fi.formID "
+                    "LEFT OUTER JOIN item i ON i.itemID = fi.itemID "
+                    "LEFT OUTER JOIN section s ON s.sectionID = i.sectionID "
+                    "LEFT OUTER JOIN usr u ON u.usrID = i.usrID "
+                    "WHERE fo.tripID = %s "
+                    "ORDER BY fo.formID, fo.formID, fi.fieldID;",
+                    [trip_id])
 
         forms = cur.fetchall()
         if forms is None:
-            return ()
+            cur.close()
+            con.close()
+            return () # TODO: return error message
 
         response = []
         counter = 0
@@ -468,12 +500,11 @@ def get_forms(trip_id):
 
         data = request.json['fieldData']
 
-        # TODO: Can this be done with an sql function instead?
+        # TODO: Could this be done with an sql function instead?
         cur.execute("SELECT sectionID FROM section WHERE name = %s;", [f"{data['section']}"])
-        cur.execute(
-            "INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) VALUES (%s, %s, %s, %s, %s, %s) "
-            "RETURNING itemID, packed;",
-            (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
+        cur.execute("INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) "
+                    "VALUES (%s, %s, %s, %s, %s, %s) RETURNING itemID, packed;",
+                    (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
         con.commit()
 
         it = cur.fetchone()
