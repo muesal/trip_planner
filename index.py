@@ -542,11 +542,29 @@ def profile():
         con.close()
         return jsonify(error="User not found"), 400
 
+    # Get all friends TODO: as sql function
+    cur.execute("SELECT usrID1, u.name "
+                "FROM friend f "
+                "JOIN usr u ON u.userID = f.userID1 "
+                "WHERE userID2 = %s "
+                "UNION "
+                "SELECT usrID2, u.name "
+                "FROM friend f "
+                "JOIN usr u ON u.userID = f.userID21 "
+                "WHERE userID1 = %s;",
+                [user_id])
+    f = cur.fetchall()
+
+    friends = {}
+    for friend in f:
+        friends[friend[0]] = friend[1]
+
     if request.method == 'GET':
         response = {
             'userId': user[0],
             'name': user[1],
-            'email': user[2]
+            'email': user[2],
+            'friends': friends
         }
 
     elif request.method == 'PUT':
@@ -567,10 +585,45 @@ def profile():
         con.commit()
 
         u = cur.fetchone()
+        if u is None:
+            cur.close()
+            con.close()
+            return jsonify(error="User could not be updated"), 500
+
+        # TODO: seperate routes add / remove friend would be more efficient...
+        # Compare the lists of friends, update the friends of the db
+        if data['friends'] is None:
+            data['friends'] = {}
+        friends_old = set(friends)
+        friends_new = set(data['friends'])
+        f = []
+        for friend in friends_old - friends_new:
+            # delete those friends
+            f.append([user_id, friend, friend, user_id])
+            cur.executemany("DELETE FROM friend WHERE (usrid1 = %s AND usrID2 = %s) OR (usrid1 = %s AND usrID2 = %s)",
+                            f)
+            con.commit()
+            if cur.fetchone() is None:
+                cur.close()
+                con.close()
+                return jsonify(error="Friends could not be deleted"), 500
+
+        f = []
+        for friend in friends_new - friends_old:
+            # insert those friends
+            f.append([user_id, friend])
+            cur.executemany("INSERT INTO friend (useID1, usrID2) VALUES (%s, %s)", f)
+            con.commit()
+            if cur.fetchone() is None:
+                cur.close()
+                con.close()
+                return jsonify(error="Friends could not be added"), 500
+
         response = {
             'id': user_id,
             'name': u[0],
-            'email': u[1]
+            'email': u[1],
+            'friends': friends_new
         }
 
     else:  # DELETE
