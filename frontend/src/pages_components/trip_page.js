@@ -10,6 +10,7 @@ import { schema, uiSchema, updateSchemas } from './ressources_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { retrieveKinds } from './new_trip_schema'
 import { retrieveSections, schema as fieldSchema, uiSchema as fieldUiSchema } from './new_field_schema';
+import { retrieveUsers } from './ressources_schema'
 import EditTripDialog from "./edit_trip_dialog"
 
 import axios from "axios";
@@ -27,8 +28,10 @@ function Trip(props) {
     const [formOK, setFormOK] = useState(false)
     const [addingField, setAddingField] = useState(false)
     const [fieldData, setFieldData] = useState({})
+    const [users, setUsers] = useState([])
 
     useEffect(() => {
+        getUsers()
         getTrip();
         getFields();
         retrieveKinds();
@@ -90,10 +93,8 @@ function Trip(props) {
 
     const changeSchemas = (form) => {
 
-        setFormOK(updateSchemas(form))
-
         if(form) {
-            let data_tmp = data;
+            let data_tmp = {};
             for(let field of form) {
                 if(field.fieldUsrName) {
                     data_tmp[field.fieldName] = field.fieldUsrName
@@ -101,6 +102,57 @@ function Trip(props) {
             }
             setData(data_tmp)
         }   
+
+        setFormOK(updateSchemas(form))
+
+        
+
+    }
+
+    const submitChange = (newData) => {
+
+        if( JSON.stringify(data) !== JSON.stringify(newData) ) {
+
+            let data_tmp = data
+            setData(newData)    
+
+            let assignData = {}
+            for(let key of Object.keys(newData)) {
+                if(!data_tmp[key] || data_tmp[key] !== newData[key]) {
+                    for(let user of users) {
+                        if(user.name === newData[key]) {
+                            assignData.userID = user.id
+                            break
+                        }
+                        
+                    }
+                    for(let field of fields[selectedDay][selectedForm]) {
+                        if(field.fieldName === key) {
+                            assignData.fieldID = field.fieldID
+                            break
+                        }
+                        
+                    }
+                    break
+                }
+            }
+
+            axios({
+                method: "put",
+                url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
+                data: {assignData},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    getFields()
+                    
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+
+        }
+
 
     }
 
@@ -111,7 +163,7 @@ function Trip(props) {
         setFormOK(false)
         if(fieldData && fieldData.name && fieldData.quantity && fieldData.section && fieldData.formID) {
             axios({
-                    method: "put",
+                    method: "post",
                     url: "http://127.0.0.1:5000/forms/" + trip.id,
                     data: {fieldData},  // TODO: add userID
                     headers: { "Content-Type": "application/json" },
@@ -137,8 +189,26 @@ function Trip(props) {
         }
         setDays(days_array)
     }
+    const getUsers = async () =>  {
+        axios({
+            method: "get",
+            url: "http://127.0.0.1:5000/users",
+            data: {},  // TODO: add userID
+            headers: { "Content-Type": "application/json" },
+        })
+            .then((res) => {
+                retrieveUsers(res.data)
+                setUsers(res.data)
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    }
 
-    const getFields = () => {
+    const getFields = async () => {
+       
+
+
         axios({
                 method: "get",
                 url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
@@ -146,6 +216,7 @@ function Trip(props) {
                 headers: { "Content-Type": "application/json" },
             })
                 .then((res) => {
+                    
                     let field_tmp = new Array(res.data[res.data.length - 1].dayOfTrip + 1);
                     for(let i = 0; i < field_tmp.length; i++) 
                         field_tmp[i] = {}
@@ -239,7 +310,7 @@ function Trip(props) {
                                 schema={schema}
                                 uischema={uiSchema}
                                 renderers={materialRenderers}
-                                onChange={({ data, errors }) => {setData(data);}}
+                                onChange={({ data, errors }) => {submitChange(data);}}
                                 cells={materialCells}
                             /> : 
                             <p> The form is empty </p>}

@@ -1,3 +1,5 @@
+let  users = [""]
+
 export function updateSchemas(fields) {
         
     if(!fields || (fields.length === 1 && !fields[0].fieldID))
@@ -8,8 +10,9 @@ export function updateSchemas(fields) {
 
     for(let field of fields) {
         properties_tmp[field.fieldName] = {
-            type: "string",
-            title: field.fieldName + " x" + field.fieldQuantity 
+            type: ["string", "null"],
+            title: field.fieldName + " x" + field.fieldQuantity,
+            enum: users
         };
 
         elements_tmp.push({
@@ -25,11 +28,19 @@ export function updateSchemas(fields) {
    
 }
 
+export async function retrieveUsers(data) {
+
+    users = [null]
+    for(let user of data)
+        users.push(user.name)
+
+}
+
+
 export const schema = {
     type: "object",
     required: [],
     properties: {
-    
     }
 };
 

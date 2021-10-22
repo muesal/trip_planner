@@ -116,6 +116,30 @@ def get_kinds():
     con.close()
     return jsonify(response)
 
+# Returns all users 
+@app.route('/users', methods=['GET'])
+def get_users():
+    con = connect()
+    cur = con.cursor()
+
+    cur.execute("SELECT usrID, name FROM usr;")
+    users = cur.fetchall()
+
+    # If no kinds were found return only 'other'
+    if not users:
+        users = [['0', 'other']]
+    response = []
+    counter = 0
+    for user in users:
+        response.insert(counter, {
+            'id': user[0],
+            'name': user[1],
+        })
+        counter += 1
+
+    cur.close()
+    con.close()
+    return jsonify(response)
 
 # Return all sections
 @app.route('/sections', methods=['GET'])
@@ -454,7 +478,7 @@ def get_trip(trip_id):
 
 
 # Get form 
-@app.route('/forms/<trip_id>', methods=['GET', 'PUT'])
+@app.route('/forms/<trip_id>', methods=['GET', 'POST', 'PUT'])
 def get_forms(trip_id):
     con = connect()
     cur = con.cursor()
@@ -496,7 +520,7 @@ def get_forms(trip_id):
             })
             counter += 1
 
-    else:  # PUT TODO: Shouldn't it be POST?
+    elif request.method == 'POST': 
 
         data = request.json['fieldData']
 
@@ -520,6 +544,20 @@ def get_forms(trip_id):
 
         fi = cur.fetchone()
         response['fieldID'] = fi[0]
+
+    else: # PUT
+
+        data = request.json['assignData']
+
+
+        cur.execute("SELECT assign_field(%s, %s)",
+                    (f"{data['userID']}", f"{data['fieldID']}"))
+        con.commit()
+
+        response = {
+            'ok': "OK"
+        }
+
 
     cur.close()
     con.close()
