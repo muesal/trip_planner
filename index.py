@@ -48,11 +48,30 @@ def add_trip():
     created_trip = cur.fetchone()[0]
     con.commit()
 
-    cur.close()
-    con.close()
     if created_trip is None:
+        cur.close()
+        con.close()
         return jsonify(error="Data could not be saved"), 500
 
+    # Add friends to a trip TODO: not tested yet (frontend is missing)
+    if data['friends']:
+        # build array containing all userIDs
+        friends = []
+        for friend in data['friends']:
+            # get friends id
+            cur.execute("SELECT usrID FROM usr WHERE name = %s", [friend])
+            f = cur.fetchone()
+            friends.append([f[0], created_trip])
+
+        if len(friends) > 0:
+            cur.executemany("INSERT INTO participates (usrID, tripID) VALUES (%s, %s)", friends)
+            if cur.fetchone() is None:
+                cur.close()
+                con.close()
+                return jsonify(error="Friends could not be added"), 500
+
+    cur.close()
+    con.close()
     return redirect('http://localhost:3000/trip/' + str(created_trip), code=200)
 
 
@@ -364,6 +383,14 @@ def get_trip(trip_id):
             con.close()
             return jsonify(error="This trip does not exist"), 500  # TODO: error code?
 
+        cur.execute("SELECT usrID, name FROM usr WHERE usrID IN (SELECT usrID FROM participates WHERE tripID = %s);",
+                    [trip_id])
+        f = cur.fetchall()
+
+        friends = {}
+        for friend in f:
+            friends[friend[0]] = friend[1]
+
         response = {
             'id': trip_id,
             'name': trip[0],
@@ -372,6 +399,7 @@ def get_trip(trip_id):
             'duration': trip[3],
             'location': trip[4],
             'content': trip[5],
+            'friends': friends,
         }
 
     elif request.method == 'PUT':
@@ -500,7 +528,7 @@ def get_forms(trip_id):
         if forms is None:
             cur.close()
             con.close()
-            return ()  # TODO: return error message
+            return jsonify(error="No forms found for this trip"), 500
 
         response = []
         counter = 0
@@ -526,15 +554,21 @@ def get_forms(trip_id):
 
         # TODO: Could this be done with an sql function instead?
         cur.execute("SELECT sectionID FROM section WHERE name = %s;", [f"{data['section']}"])
-        cur.execute("INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) "
-                    "VALUES (%s, %s, %s, %s, %s, %s) RETURNING itemID, packed;",
-                    (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
+        cur.execute("SELECT add_field(%s, %s, %s, %s, %s)",
+                    (f"{data['formID']}", f"{data['name']}", f"{data['quantity']}", cur.fetchone()[0], trip_id))
         con.commit()
 
-        it = cur.fetchone()
+        # cur.execute("INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) "
+        #            "VALUES (%s, %s, %s, %s, %s, %s) RETURNING itemID;",
+        #            (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
+        # cur.execute("INSERT INTO field (formID, itemID, assigned) VALUES (%s, %s, %s)"
+        #            "RETURNING fieldID;",
+        #            (f"{data['formID']}", response['itemID'], 'False'))
+        # con.commit()
+
+        fld = cur.fetchone()
         response = {
-            'itemID': it[0],
-            'fieldID': None
+            'fieldID': fld[0]
         }
 
         cur.execute("INSERT INTO field (formID, itemID, assigned) VALUES (%s, %s, %s)"
