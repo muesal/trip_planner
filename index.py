@@ -230,7 +230,8 @@ def checklist(trip_id):
         cur.execute("SELECT i.itemID, i.name, i.quantity, s.name, i.packed"
                     " FROM item i "
                     "INNER JOIN section s ON s.sectionID = i.sectionID "
-                    "WHERE tripID = %s AND usrID = %s;",
+                    "WHERE tripID = %s AND usrID = %s "
+                    "ORDER BY (i.packed);",  # todo: descending or ascending?
                     (trip_id, user_id))
         cl = cur.fetchall()
         response = []
@@ -552,37 +553,19 @@ def get_forms(trip_id):
 
         data = request.json['fieldData']
 
-        # TODO: Could this be done with an sql function instead?
         cur.execute("SELECT sectionID FROM section WHERE name = %s;", [f"{data['section']}"])
         cur.execute("SELECT add_field(%s, %s, %s, %s, %s)",
                     (f"{data['formID']}", f"{data['name']}", f"{data['quantity']}", cur.fetchone()[0], trip_id))
         con.commit()
-
-        # cur.execute("INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) "
-        #            "VALUES (%s, %s, %s, %s, %s, %s) RETURNING itemID;",
-        #            (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
-        # cur.execute("INSERT INTO field (formID, itemID, assigned) VALUES (%s, %s, %s)"
-        #            "RETURNING fieldID;",
-        #            (f"{data['formID']}", response['itemID'], 'False'))
-        # con.commit()
 
         fld = cur.fetchone()
         response = {
             'fieldID': fld[0]
         }
 
-        cur.execute("INSERT INTO field (formID, itemID, assigned) VALUES (%s, %s, %s)"
-                    "RETURNING fieldID;",
-                    (f"{data['formID']}", response['itemID'], 'False'))
-        con.commit()
-
-        fi = cur.fetchone()
-        response['fieldID'] = fi[0]
-
-    else: # PUT
+    else:  # PUT
 
         data = request.json['assignData']
-
 
         cur.execute("SELECT assign_field(%s, %s)",
                     (f"{data['userID']}", f"{data['fieldID']}"))
@@ -591,7 +574,6 @@ def get_forms(trip_id):
         response = {
             'ok': "OK"
         }
-
 
     cur.close()
     con.close()
