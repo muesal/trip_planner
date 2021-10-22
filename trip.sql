@@ -10,9 +10,9 @@ DROP TABLE IF EXISTS
 ------------------------------------------------------------------------------------------------------------------------
 CREATE TABLE usr (
     usrID    SERIAL PRIMARY KEY,
-    name     VARCHAR(50),
+    name     VARCHAR(50) UNIQUE,
     email    VARCHAR(50) UNIQUE,
-    password VARCHAR(50) UNIQUE
+    password VARCHAR(50)
 );
 
 CREATE TABLE friend (

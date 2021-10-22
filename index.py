@@ -48,11 +48,30 @@ def add_trip():
     created_trip = cur.fetchone()[0]
     con.commit()
 
-    cur.close()
-    con.close()
     if created_trip is None:
+        cur.close()
+        con.close()
         return jsonify(error="Data could not be saved"), 500
 
+    # Add friends to a trip TODO: not tested yet (frontend is missing)
+    if data['friends']:
+        # build array containing all userIDs
+        friends = []
+        for friend in data['friends']:
+            # get friends id
+            cur.execute("SELECT usrID FROM usr WHERE name = %s", [friend])
+            f = cur.fetchone()
+            friends.append([f[0], created_trip])
+
+        if len(friends) > 0:
+            cur.executemany("INSERT INTO participates (usrID, tripID) VALUES (%s, %s)", friends)
+            if cur.fetchone() is None:
+                cur.close()
+                con.close()
+                return jsonify(error="Friends could not be added"), 500
+
+    cur.close()
+    con.close()
     return redirect('http://localhost:3000/trip/' + str(created_trip), code=200)
 
 
@@ -340,6 +359,14 @@ def get_trip(trip_id):
             con.close()
             return jsonify(error="This trip does not exist"), 500  # TODO: error code?
 
+        cur.execute("SELECT usrID, name FROM usr WHERE usrID IN (SELECT usrID FROM participates WHERE tripID = %s);",
+                    [trip_id])
+        f = cur.fetchall()
+
+        friends = {}
+        for friend in f:
+            friends[friend[0]] = friend[1]
+
         response = {
             'id': trip_id,
             'name': trip[0],
@@ -348,6 +375,7 @@ def get_trip(trip_id):
             'duration': trip[3],
             'location': trip[4],
             'content': trip[5],
+            'friends': friends,
         }
 
     elif request.method == 'PUT':
