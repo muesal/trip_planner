@@ -476,7 +476,7 @@ def get_forms(trip_id):
         if forms is None:
             cur.close()
             con.close()
-            return ()  # TODO: return error message
+            return jsonify(error="No forms found for this trip"), 500
 
         response = []
         counter = 0
@@ -496,30 +496,28 @@ def get_forms(trip_id):
             })
             counter += 1
 
-    else:  # PUT TODO: Shouldn't it be POST?
+    else:  # PUT
 
         data = request.json['fieldData']
 
         # TODO: Could this be done with an sql function instead?
         cur.execute("SELECT sectionID FROM section WHERE name = %s;", [f"{data['section']}"])
-        cur.execute("INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) "
-                    "VALUES (%s, %s, %s, %s, %s, %s) RETURNING itemID, packed;",
-                    (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
+        cur.execute("SELECT add_field(%s, %s, %s, %s, %s)",
+                    (f"{data['formID']}", f"{data['name']}", f"{data['quantity']}", cur.fetchone()[0], trip_id))
         con.commit()
 
-        it = cur.fetchone()
+        # cur.execute("INSERT INTO item (name, quantity, packed, sectionID, usrID, tripID) "
+        #            "VALUES (%s, %s, %s, %s, %s, %s) RETURNING itemID;",
+        #            (f"{data['name']}", f"{data['quantity']}", 'False', cur.fetchone()[0], user_id, trip_id))
+        # cur.execute("INSERT INTO field (formID, itemID, assigned) VALUES (%s, %s, %s)"
+        #            "RETURNING fieldID;",
+        #            (f"{data['formID']}", response['itemID'], 'False'))
+        # con.commit()
+
+        fld = cur.fetchone()
         response = {
-            'itemID': it[0],
-            'fieldID': None
+            'fieldID': fld[0]
         }
-
-        cur.execute("INSERT INTO field (formID, itemID, assigned) VALUES (%s, %s, %s)"
-                    "RETURNING fieldID;",
-                    (f"{data['formID']}", response['itemID'], 'False'))
-        con.commit()
-
-        fi = cur.fetchone()
-        response['fieldID'] = fi[0]
 
     cur.close()
     con.close()

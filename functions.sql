@@ -93,6 +93,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- add a field and corresponding item
+CREATE OR REPLACE FUNCTION add_field (frm int, name VARCHAR, quant int, section int, trp int)
+returns INTEGER AS $$
+DECLARE
+    itm INTEGER;
+    fld INTEGER;
+BEGIN
+    INSERT INTO item (name, quantity, packed, sectionID, tripID) VALUES (name, quant, False, section, trp)
+        RETURNING itemID INTO itm;
+    INSERT INTO field (formID, itemID, assigned) VALUES (frm, itm, False) RETURNING fieldID into fld;
+    RETURN fld;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Delete a user. Unset it from all assigned items
 CREATE OR REPLACE FUNCTION delete_usr (user_ int) returns void AS $$
 DECLARE
@@ -100,7 +114,7 @@ DECLARE
     trp INTEGER;
     trp_u record;
 BEGIN
-    -- unassign fields
+    -- un-assign fields
     FOR itm in SELECT itemID FROM item WHERE usrID = user_ loop
         UPDATE field SET assigned = false WHERE itemID = itm;
         IF FOUND THEN
