@@ -30,6 +30,7 @@ function EditTripForm(props) {
                     .then((res) => {
                         console.log(res);
                         props.getTrip();
+                        props.getFields();
                     })
                     .catch((err) => {
                         console.log(err);

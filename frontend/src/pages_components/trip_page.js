@@ -259,7 +259,7 @@ function Trip(props) {
                     <Button onClick={handleOpen} variant="contained" color="inherit" >Edit Trip</Button>
 
                     {tripEditDialogOpen && 
-                        <EditTripDialog handleClose={handleClose} trip={trip} getTrip={getTrip} />}
+                        <EditTripDialog handleClose={handleClose} trip={trip} getTrip={getTrip} getFields={getFields} />}
                 </div>
 
                 <div className="tripDetails">

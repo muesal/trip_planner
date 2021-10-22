@@ -27,7 +27,7 @@ function EditTripDialog(props) {
                        
                         <DialogContent dividers>
                             <Grid container spacing={3}>
-                                <EditTripForm handleClose={props.handleClose} trip={props.trip} getTrip={props.getTrip}/>
+                                <EditTripForm handleClose={props.handleClose} trip={props.trip} getTrip={props.getTrip} getFields={props.getFields}/>
                             </Grid>
                         </DialogContent>
                         
