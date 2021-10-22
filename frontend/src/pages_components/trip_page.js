@@ -254,8 +254,8 @@ function Trip(props) {
     return (
 
             <main>
-
-            <div className="editTripButton">
+       
+                <div className="editTripButton">
                     <Button onClick={handleOpen} variant="contained" color="inherit" >Edit Trip</Button>
 
                     {tripEditDialogOpen && 

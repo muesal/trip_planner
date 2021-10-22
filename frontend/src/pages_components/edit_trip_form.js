@@ -19,7 +19,7 @@ function EditTripForm(props) {
     const saveChanges = () => {
 
         if(data && data.name && data.content && data.duration && data.location && data.start && data.kind) {
-            console.log("TEST")
+
             data.start = moment(data.start, "YYYY-MM-DD").format("YYYY/MM/DD")
             axios({
                     method: "put",

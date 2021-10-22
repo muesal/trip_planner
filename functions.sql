@@ -57,7 +57,7 @@ $$ LANGUAGE plpgsql;
 -- Function that adds forms for every day that gets added
 CREATE OR REPLACE FUNCTION increase_duration (duration_new int, duration_old int, trp int) returns void AS $$
 BEGIN
-    FOR day in duration_old..duration_new loop
+    FOR day in (duration_old+1)..duration_new loop
         INSERT INTO form (tripID, name, dayOfTrip) VALUES
             (trp, 'Breakfast', day), (trp, 'Lunch', day),
             (trp, 'Dinner', day), (trp, 'Night', day);

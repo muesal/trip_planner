@@ -5,8 +5,6 @@ export function updateSchemas(fields) {
     if(!fields || (fields.length === 1 && !fields[0].fieldID))
         return false;
 
-    console.log("fields", fields)
-
     let elements_tmp = []
     let properties_tmp = {}
 
