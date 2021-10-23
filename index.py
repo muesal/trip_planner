@@ -218,6 +218,7 @@ def checklist_first():
 
     return jsonify(trip[0])
 
+
 # Login 
 @app.route('/login', methods=['POST'])
 def login():
@@ -226,18 +227,17 @@ def login():
     email = request.json['email']
     passwd = request.json['password']
     cur.execute(
-        "SELECT * FROM usr WHERE email = %s",(email,))
+        "SELECT * FROM usr WHERE email = %s", [email])
     users = cur.fetchall()
     if not users:
         data = {'error': "Email or password is incorrect."}
     else:
-      if (passwd == users[0][3]):
-        data = {'msg': "You login succesfully. Redirecting to your account page.", 'usrID': users[0][0]}
-      else:
-        data = {'error': "Email or password is incorrect."}   
-    cur.close()
-    con.close()     
+        if (passwd == users[0][3]):
+            data = {'msg': "You login succesfully. Redirecting to your account page.", 'usrID': users[0][0]}
+        else:
+            data = {'error': "Email or password is incorrect."}
     return jsonify(data)
+
 
 # Signin
 @app.route('/signin', methods=['POST'])
@@ -254,14 +254,15 @@ def signin():
     if users:
         data = {'error': "The email already exist."}
     else:
-      usrID = cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
-      con.commit()
-      data = {'msg': "You signin succesfully. Redirecting to your account page.", 'usrID': usrID}  
+        usrID = cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
+        con.commit()
+        data = {'msg': "You signin succesfully. Redirecting to your account page.", 'usrID': usrID}
     return jsonify(data)
+
 
 # Update profile
 @app.route('/update', methods=['POST'])
-def signin():
+def update():
     id = request.json['id']
     username = request.json['username']
     email = request.json['email']
@@ -273,25 +274,26 @@ def signin():
     if users:
         data = {'error': "The email already exist."}
     else:
-      cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
-      con.commit()
-      data = {'msg': "You signin succesfully. Redirecting to your account page."}  
+        cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
+        con.commit()
+        data = {'msg': "You signin succesfully. Redirecting to your account page."}
     cur.close()
     con.close()
     return jsonify(data)
 
+
 # Get usr data
 @app.route('/usrdata', methods=['GET'])
-def signin():
-    id = request.json['id']
+def usr_data():
+    req = request
+    user_id = req.json['id']
     cur.execute(
-        "SELECT * FROM usr WHERE usrID = %s",(id,))
+        "SELECT * FROM usr WHERE usrID = %s", [user_id])
     users = cur.fetchall()
-    data=[]
+    data = []
     if users:
         data = {'username': users[0][1], 'email': users[0][2], 'password': users[0][3]}
     return jsonify(data)    
-
 
 
 # return the checklist to the given trip for that user
