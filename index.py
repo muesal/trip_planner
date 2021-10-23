@@ -566,9 +566,12 @@ def get_forms(trip_id):
     else:  # PUT
 
         data = request.json['assignData']
+        
+        if 'userID' not in  data :
+            data['userID'] = None
 
         cur.execute("SELECT assign_field(%s, %s)",
-                    (f"{data['userID']}", f"{data['fieldID']}"))
+                    (data['userID'], f"{data['fieldID']}"))
         con.commit()
 
         response = {

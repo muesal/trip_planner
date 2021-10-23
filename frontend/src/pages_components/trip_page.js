@@ -29,6 +29,7 @@ function Trip(props) {
     const [addingField, setAddingField] = useState(false)
     const [fieldData, setFieldData] = useState({})
     const [users, setUsers] = useState([])
+    const [formsCompletion, setFormsCompletion] = useState([])
 
     useEffect(() => {
         getUsers()
@@ -45,6 +46,7 @@ function Trip(props) {
 
     useEffect(() => {
         if(fields) {
+
             if(selectedForm === "")
                 setSelectedForm(Object.keys(fields[selectedDay])[0])
 
@@ -54,6 +56,11 @@ function Trip(props) {
                 changeSchemas(fields[selectedDay][selectedForm])
         }
     }, [fields]) 
+
+    useEffect(() => {
+        if(days.length > 0 && fields)
+            computeFormsCompletion()
+    }, [days, fields]) 
 
     useEffect(() => {
         setAddingField(false)
@@ -189,6 +196,7 @@ function Trip(props) {
         }
         setDays(days_array)
     }
+
     const getUsers = async () =>  {
         axios({
             method: "get",
@@ -250,6 +258,39 @@ function Trip(props) {
                     console.log(err);
                 });    
     }
+
+    const computeFormsCompletion = () => {
+
+
+        let formsCompletion_tmp = Array(days.length)
+
+        for(let day in days) {
+            formsCompletion_tmp[day] = {}
+
+            for(let form of Object.keys(fields[day])) {
+                let formCompleted = true;
+                for(let field of fields[day][form]) {
+                    if(field.fieldName && !field.fieldUsrID) {
+                        formCompleted = false
+                        break
+                    }
+                }  
+                formsCompletion_tmp[day][form] = formCompleted
+            }
+        }
+
+        setFormsCompletion(formsCompletion_tmp)
+
+    }
+
+    const isDayCompleted = (day) => {
+        for(let form of Object.keys(formsCompletion[day])) {
+            if(formsCompletion[day][form] === false)
+                return false
+        }
+
+        return true
+    }
  
     return (
 
@@ -291,7 +332,9 @@ function Trip(props) {
                         {days.map((day, index) => {
                             return (
                                 <div className="day" key={index}>
-                                    <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="inherit" >{day}</Button>
+                                    {isDayCompleted(index) ? 
+                                    <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="inherit" >{day}</Button> : 
+                                    <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="secondary" >{day}</Button> }
                                 </div>          
                             );
                         })}
@@ -342,7 +385,9 @@ function Trip(props) {
                             Object.keys(fields[selectedDay]).map((form, index) => {
                             return (
                                 <div className="formButton" key={index}>
-                                    <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button>
+                                    {formsCompletion[selectedDay][form] ? 
+                                        <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button> : 
+                                        <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="secondary" >{fields[selectedDay][form][0].formName}</Button>}
                                 </div>          
                             );
                         })}
