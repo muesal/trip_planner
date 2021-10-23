@@ -507,7 +507,7 @@ def get_trip(trip_id):
 
 
 # Get form 
-@app.route('/forms/<trip_id>', methods=['GET', 'POST', 'PUT'])
+@app.route('/forms/<trip_id>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def get_forms(trip_id):
     con = connect()
     cur = con.cursor()
@@ -561,6 +561,18 @@ def get_forms(trip_id):
         fld = cur.fetchone()
         response = {
             'fieldID': fld[0]
+        }
+
+    elif request.method == 'DELETE':
+        data = request.json['fieldData']
+
+        cur.execute("SELECT delete_field(%s)",
+                    (f"{data['fieldID']}"))
+        con.commit()
+
+        itm = cur.fetchone()
+        response = {
+            'itemID': itm[0]
         }
 
     else:  # PUT

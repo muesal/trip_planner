@@ -107,6 +107,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- delete a field and corresponding item
+CREATE OR REPLACE FUNCTION delete_field (fld int)
+returns INTEGER AS $$
+DECLARE
+    itm INTEGER;
+BEGIN
+    SELECT itemid INTO itm FROM field WHERE fieldid = fld;
+    DELETE FROM field WHERE fieldid = fld;
+    DELETE FROM item WHERE itemid = itm;
+    RETURN itm;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Delete a user. Unset it from all assigned items
 CREATE OR REPLACE FUNCTION delete_usr (user_ int) returns void AS $$
 DECLARE
