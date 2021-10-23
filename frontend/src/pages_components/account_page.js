@@ -15,16 +15,24 @@ function Account(props) {
   const [emailForm, setEmailForm] = useState("");
   const [usernameForm, setUsernameForm] = useState("");
   const [passwordForm, setPasswordForm] = useState("");
+  const [alert, setAlert] = useState(false);
+  const [alertText, setAlertText] = useState("");
+  const [alertType, setAlertType] = useState("");
 
   useEffect(() => {
     getData();
   });
 
   const getData = () => {
+    var id =props.usrID;
+    var usrdata = {
+      id
+    };
+
     axios({
       method: "get",
       url: "http://127.0.0.1:5000/usrdata",
-      data: {'usrID': props.usrID},  // TODO: add userID
+      data: JSON.stringify(usrdata),  // TODO: add userID
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
@@ -121,6 +129,7 @@ function Account(props) {
             </Grid>
             <Grid item >
               <TextField
+                value={passwordForm}
                 variant="outlined"
                 label="Password"
                 type="password"
