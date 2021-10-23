@@ -135,6 +135,7 @@ def get_kinds():
     con.close()
     return jsonify(response)
 
+
 # Returns all users 
 @app.route('/users', methods=['GET'])
 def get_users():
@@ -144,9 +145,9 @@ def get_users():
     cur.execute("SELECT usrID, name FROM usr;")
     users = cur.fetchall()
 
-    # If no kinds were found return only 'other'
+    # If no user were found return only 'none'
     if not users:
-        users = [['0', 'other']]
+        users = [['-1', 'none']]
     response = []
     counter = 0
     for user in users:
@@ -159,6 +160,7 @@ def get_users():
     cur.close()
     con.close()
     return jsonify(response)
+
 
 # Return all sections
 @app.route('/sections', methods=['GET'])
@@ -688,7 +690,6 @@ def profile():
             con.close()
             return jsonify(error="User could not be updated"), 500
 
-        # TODO: seperate routes add / remove friend would be more efficient...
         # Compare the lists of friends, update the friends of the db
         if data['friends'] is None:
             data['friends'] = {}
