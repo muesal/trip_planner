@@ -32,6 +32,54 @@ def home():
     return ''
 
 
+# Login
+@app.route('/login', methods=['POST'])
+def login():
+    con = connect()
+    cur = con.cursor()
+    data = request.json['data']
+    cur.execute("SELECT usrID, passwird FROM usr WHERE email = %s;", [f"{data['email']}"])
+    user = cur.fetchone()
+    if not user:
+        response = {'error': "Email or password is incorrect."}
+    else:
+        if data['password'] == user[3]:
+            response = {'msg': "You login succesfully. Redirecting to your account page.", 'usrID': user[0]}
+        else:
+            response = {'error': "Email or password is incorrect."}
+
+    cur.close()
+    con.close()
+    return jsonify(response)
+
+
+# Signin
+@app.route('/signin', methods=['POST'])
+def signin():
+    con = connect()
+    cur = con.cursor()
+    data = request.json['data']
+
+    # Check if email already in database: must be unique
+    cur.execute("SELECT * FROM usr WHERE email = %s;", [f"{data['email']}"])
+    users = cur.fetchall()
+
+    if users:
+        response = {'error': "The email already exist."}
+    else:
+        cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;",
+                    (f"{data['username']}", f"{data['email']}", f"{data['password']}"))
+        con.commit()
+        user_id = cur.fetchone()
+        if user_id:
+            response = {'msg': "You signin succesfully. Redirecting to your account page.", 'usrID': user_id}
+        else:
+            response = {'msg': "You could not be signed in (Serer Error)"}
+    cur.close()
+    con.close()
+    return jsonify(response)
+
+
 # Create a new trip.
 @app.route('/create-trip', methods=['POST'])
 def add_trip():
@@ -206,83 +254,6 @@ def checklist_first():
         return jsonify(error="No unfinished trip found. Try reloading the page."), 400
 
     return jsonify(trip[0])
-
-
-# Login 
-@app.route('/login', methods=['POST'])
-def login():
-    con = connect()
-    cur = con.cursor()
-    email = request.json['email']
-    passwd = request.json['password']
-    cur.execute(
-        "SELECT * FROM usr WHERE email = %s", [email])
-    users = cur.fetchall()
-    if not users:
-        data = {'error': "Email or password is incorrect."}
-    else:
-        if (passwd == users[0][3]):
-            data = {'msg': "You login succesfully. Redirecting to your account page.", 'usrID': users[0][0]}
-        else:
-            data = {'error': "Email or password is incorrect."}
-    return jsonify(data)
-
-
-# Signin
-@app.route('/signin', methods=['POST'])
-def signin():
-    con = connect()
-    cur = con.cursor()
-    username = request.json['username']
-    email = request.json['email']
-    passwd = request.json['password']
-    cur.execute(
-        "SELECT * FROM usr WHERE email = %s",(email,))
-    users = cur.fetchall()
-    
-    if users:
-        data = {'error': "The email already exist."}
-    else:
-        usrID = cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
-        con.commit()
-        data = {'msg': "You signin succesfully. Redirecting to your account page.", 'usrID': usrID}
-    return jsonify(data)
-
-
-# Update profile
-@app.route('/update', methods=['POST'])
-def update():
-    id = request.json['id']
-    username = request.json['username']
-    email = request.json['email']
-    passwd = request.json['password']
-    cur.execute(
-        "UPDATE usr SET (username, email, password) = (%s, %s, %s) WHERE usrID = %s RETURNING itemID",(username, email, passwd, id))
-    users = cur.fetchall()
-    
-    if users:
-        data = {'error': "The email already exist."}
-    else:
-        cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
-        con.commit()
-        data = {'msg': "You signin succesfully. Redirecting to your account page."}
-    cur.close()
-    con.close()
-    return jsonify(data)
-
-
-# Get usr data
-@app.route('/usrdata', methods=['GET'])
-def usr_data():
-    req = request
-    user_id = req.json['id']
-    cur.execute(
-        "SELECT * FROM usr WHERE usrID = %s", [user_id])
-    users = cur.fetchall()
-    data = []
-    if users:
-        data = {'username': users[0][1], 'email': users[0][2], 'password': users[0][3]}
-    return jsonify(data)    
 
 
 # return the checklist to the given trip for that user
@@ -628,7 +599,7 @@ def get_forms(trip_id):
             })
             counter += 1
 
-    elif request.method == 'POST': 
+    elif request.method == 'POST':
 
         data = request.json['fieldData']
 
@@ -659,13 +630,54 @@ def get_forms(trip_id):
     return jsonify(response)
 
 
+# Update profile
+@app.route('/update', methods=['POST'])
+def update():
+    con = connect()
+    cur = con.cursor()
+    data = request.json['data']
+
+    cur.execute("UPDATE usr SET (username, email, password) = (%s, %s, %s) WHERE usrID = %s RETURNING usrID;",
+                (f"{data['username']}", f"{data['email']}", f"{data['password']}", f"{data['id']}"))
+    con.commit()
+    user = cur.fetchone()
+
+    if not user:
+        data = {'error': "Data could not be updated."}
+    else:
+        data = {'msg': "Update successful."}
+    cur.close()
+    con.close()
+    return jsonify(data)
+
+
+# Get usr data
+@app.route('/usrdata', methods=['GET'])
+def usr_data():
+    con = connect()
+    cur = con.cursor()
+
+    req = request
+    data = req.json['data']
+
+    cur.execute("SELECT * FROM usr WHERE usrID = %s", [f"{data['id']}"])
+    user = cur.fetchone()
+    response = []
+    if user:
+        response = {'username': user[1], 'email': user[2], 'password': user[3]}
+
+    cur.close()
+    con.close()
+    return jsonify(response)
+
+
 # GET / Update / Delete the account of the user
 @app.route('/account', methods=['GET', 'PUT', 'DELETE'])
 def profile():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID, hash trip id?
+    user_id = 1  # TODO: userID
 
     # If the trip does not exist or the user is not participating return error
     cur.execute("SELECT name, email FROM usr WHERE usrID = %s;", [user_id])
