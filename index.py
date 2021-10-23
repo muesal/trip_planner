@@ -135,6 +135,7 @@ def get_kinds():
     con.close()
     return jsonify(response)
 
+
 # Returns all users 
 @app.route('/users', methods=['GET'])
 def get_users():
@@ -144,9 +145,9 @@ def get_users():
     cur.execute("SELECT usrID, name FROM usr;")
     users = cur.fetchall()
 
-    # If no kinds were found return only 'other'
+    # If no user were found return only 'none'
     if not users:
-        users = [['0', 'other']]
+        users = [['-1', 'none']]
     response = []
     counter = 0
     for user in users:
@@ -159,6 +160,7 @@ def get_users():
     cur.close()
     con.close()
     return jsonify(response)
+
 
 # Return all sections
 @app.route('/sections', methods=['GET'])
@@ -204,6 +206,50 @@ def checklist_first():
         return jsonify(error="No unfinished trip found. Try reloading the page."), 400
 
     return jsonify(trip[0])
+
+# Login 
+@app.route('/login', methods=['POST'])
+def login():
+    con = connect()
+    cur = con.cursor()
+    email = request.json['email']
+    passwd = request.json['password']
+    cur.execute(
+        "SELECT * FROM usr WHERE email = %s",(email,))
+    users = cur.fetchall()
+    if not users:
+        data = {'error': "Email or password is incorrect."}
+    else:
+      if (passwd == users[0][3]):
+        data = {'msg': "You login succesfully. Redirecting to your account page."}
+      else:
+        data = {'error': "Email or password is incorrect."}   
+    cur.close()
+    con.close()     
+    return jsonify(data)
+
+# Signin
+@app.route('/signin', methods=['POST'])
+def signin():
+    con = connect()
+    cur = con.cursor()
+    username = request.json['username']
+    email = request.json['email']
+    passwd = request.json['password']
+    cur.execute(
+        "SELECT * FROM usr WHERE email = %s",(email,))
+    users = cur.fetchall()
+    
+    if users:
+        data = {'error': "The email already exist."}
+    else:
+      cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
+      con.commit()
+      data = {'msg': "You signin succesfully. Redirecting to your account page."}  
+    cur.close()
+    con.close()
+    return jsonify(data)
+
 
 
 # return the checklist to the given trip for that user
@@ -647,7 +693,6 @@ def profile():
             con.close()
             return jsonify(error="User could not be updated"), 500
 
-        # TODO: seperate routes add / remove friend would be more efficient...
         # Compare the lists of friends, update the friends of the db
         if data['friends'] is None:
             data['friends'] = {}

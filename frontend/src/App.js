@@ -13,6 +13,8 @@ import Account from "./pages_components/account_page";
 import Trip from "./pages_components/trip_page";
 
 import { useHistory } from "react-router-dom";
+import Login from './pages_components/login_page';
+import Signin from './pages_components/signin_page';
 
 function App() {
 
@@ -92,6 +94,8 @@ function App() {
                 <Route exact path={"/checklist"} render={() => <ChecklistRedirect apiData={apiData} loading={loading} getData={getData}/>} />
                 <Route exact path={"/account"} component={Account} />
                 <Route exact path={"/trip/:id"} render={(matchProps) => <Trip {...matchProps}/>}/>
+                <Route exact path={"/login"} component={Login} />
+                <Route exact path={"/signin"} component={Signin} />
             </Switch>
 
         </div>
