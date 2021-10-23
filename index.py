@@ -205,6 +205,42 @@ def checklist_first():
 
     return jsonify(trip[0])
 
+# Login 
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.json['email']
+    passwd = request.json['password']
+    cur.execute(
+        "SELECT * FROM usr WHERE email = %s",(email,))
+    users = cur.fetchall()
+    if not users:
+        data = {'error': "Email or password is incorrect."}
+    else:
+      if (passwd == users[0][3]):
+        data = {'msg': "You login succesfully. Redirecting to your account page."}
+      else:
+        data = {'error': "Email or password is incorrect."}    
+    return jsonify(data)
+
+# Signin
+@app.route('/signin', methods=['POST'])
+def signin():
+    username = request.json['username']
+    email = request.json['email']
+    passwd = request.json['password']
+    cur.execute(
+        "SELECT * FROM usr WHERE email = %s",(email,))
+    users = cur.fetchall()
+    
+    if users:
+        data = {'error': "The email already exist."}
+    else:
+      cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
+      con.commit()
+      data = {'msg': "You signin succesfully. Redirecting to your account page."}  
+    return jsonify(data)
+
+
 
 # return the checklist to the given trip for that user
 @app.route('/checklist/<trip_id>', methods=['GET', 'PUT', 'POST', 'DELETE'])
