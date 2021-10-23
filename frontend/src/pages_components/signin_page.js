@@ -86,7 +86,7 @@ function Signin(props) {
           setAlertText(response.data.msg);
           setAlert(true);
           setAlertType("success");
-          props.loggedHandler(true);
+          props.loggedHandler(true, response.data.usrID);
           setTimeout(() => {
             setRedirect(true);
           }, 2000);

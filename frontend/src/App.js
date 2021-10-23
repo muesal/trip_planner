@@ -22,14 +22,16 @@ function App() {
   const [apiData, setApiData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [logged, setLogged] = useState(false);
+  const [usrID, setUsrID] = useState("");
   const history = useHistory();
 
   useEffect(() => {
     getData();
   }, []);
 
-  const loggedHandler = (loged) => {
-    setLogged(loged)
+  const loggedHandler = (loged, id) => {
+    setLogged(loged);
+    setUsrID(id);
   }
 
   const getData = () => {
