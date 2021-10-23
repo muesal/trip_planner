@@ -208,6 +208,8 @@ def checklist_first():
 # Login 
 @app.route('/login', methods=['POST'])
 def login():
+    con = connect()
+    cur = con.cursor()
     email = request.json['email']
     passwd = request.json['password']
     cur.execute(
@@ -219,12 +221,16 @@ def login():
       if (passwd == users[0][3]):
         data = {'msg': "You login succesfully. Redirecting to your account page."}
       else:
-        data = {'error': "Email or password is incorrect."}    
+        data = {'error': "Email or password is incorrect."}   
+    cur.close()
+    con.close()     
     return jsonify(data)
 
 # Signin
 @app.route('/signin', methods=['POST'])
 def signin():
+    con = connect()
+    cur = con.cursor()
     username = request.json['username']
     email = request.json['email']
     passwd = request.json['password']
@@ -238,6 +244,8 @@ def signin():
       cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
       con.commit()
       data = {'msg': "You signin succesfully. Redirecting to your account page."}  
+    cur.close()
+    con.close()
     return jsonify(data)
 
 
