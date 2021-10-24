@@ -295,23 +295,23 @@ function Trip(props) {
     }
  
     const finishTrip = () => {
-
-        let data = {finished: true}
-        axios({
-            method: "put",
-            url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
-            data: {data},  // TODO: add userID
-            headers: { "Content-Type": "application/json" },
-        })
-            .then((res) => {
-                history.push("/trips");
-                
+        if (window.confirm("Confirm end of trip")) {
+            let data = {finished: true}
+            axios({
+                method: "put",
+                url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
+                data: {data},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
             })
-            .catch((err) => {
-                console.log(err);
-            });
+                .then((res) => {
+                    history.push("/trips");
+                    
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
 
-        
+        }
     }
 
     return (
