@@ -54,7 +54,7 @@ def add_trip():
         return jsonify(error="Data could not be saved"), 500
 
     # Add friends to a trip TODO: not tested yet (frontend is missing)
-    if data['friends']:
+    if "friends" in data:
         # build array containing all userIDs
         friends = []
         for friend in data['friends']:

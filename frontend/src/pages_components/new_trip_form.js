@@ -40,7 +40,6 @@ function NewTripForm(props) {
             })
                 .then((res) => {
                     props.getTrips();
-                    props.handleClose();
                 })
                 .catch((err) => {
                     console.log(err);
@@ -48,7 +47,7 @@ function NewTripForm(props) {
 
         }
 
-        props.getTrips(); 
+        props.handleClose();
     }
 
     return (

@@ -4,6 +4,7 @@ import React, {  useState, useEffect } from 'react';
 import { schema, uiSchema } from './new_trip_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { JsonForms } from '@jsonforms/react';
+import { useHistory } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
 
@@ -11,6 +12,7 @@ import moment from "moment";
 function EditTripForm(props) {
 
     const [data, setData] = useState();
+    const history = useHistory();
 
     const cancelEdit = () => {
         props.handleClose();
@@ -56,6 +58,7 @@ function EditTripForm(props) {
                     console.log(err);
                 });
         props.handleClose();
+        history.push("/trips");
     }
 
     useEffect(() => {
