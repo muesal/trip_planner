@@ -24,6 +24,7 @@ function EditTripForm(props) {
             axios({
                     method: "put",
                     url: "http://127.0.0.1:5000/trip/" + props.trip.id,
+                    credentials: 'include',
                     data: {data},  // TODO: add userID
                     headers: { "Content-Type": "application/json" },
                 })
@@ -46,6 +47,7 @@ function EditTripForm(props) {
         axios({
                 method: "delete",
                 url: "http://127.0.0.1:5000/trip/" + props.trip.id,
+                credentials: 'include',
                 data: {},  // TODO: add userID
                 headers: { "Content-Type": "application/json" },
             })

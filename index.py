@@ -1,6 +1,8 @@
-from flask import Flask, jsonify, request, redirect, url_for
+from flask import Flask, jsonify, request, redirect, url_for, session
 from flask_cors import CORS
+from flask_session import Session
 from dotenv import load_dotenv
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, set_access_cookies
 import psycopg2
 import os
 
@@ -12,9 +14,17 @@ DATABASE_USERNAME = os.getenv('DATABSE_USERNAME')
 DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'qasdtfzghjbvcftdr567z8uijnhbvgfcdres45r6t7z8u9i0o'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config["JWT_SECRET_KEY"] = 'qAWQ3W4E5Ra3w4erdfrt67zughu8z7t6frdesw34e5r6tzughji'
+app.config["JWT_TOKEN_LOCATION"] ="cookies"
+app.config['JWT_COOKIE_SECURE'] = False
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
+SESSION_TYPE = 'filesystem'
 
-# CORS enables access to the database
-CORS(app)
+jwt = JWTManager(app)
+Session(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, support_credentials=True)
 
 
 # Get the connection to the database
@@ -25,6 +35,13 @@ def connect():
         password=DATABASE_PASSWORD
     )
     return con
+
+
+@app.after_request
+def middleware_for_response(response):
+    # Allowing the credentials in the response.
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 
 @app.route('/')
@@ -38,19 +55,27 @@ def login():
     con = connect()
     cur = con.cursor()
     data = request.json['data']
-    cur.execute("SELECT usrID, passwird FROM usr WHERE email = %s;", [f"{data['email']}"])
+    cur.execute("SELECT usrID, password FROM usr WHERE email = %s;", [f"{data['email']}"])
     user = cur.fetchone()
-    if not user:
-        response = {'error': "Email or password is incorrect."}
-    else:
-        if data['password'] == user[3]:
-            response = {'msg': "You login succesfully. Redirecting to your account page.", 'usrID': user[0]}
-        else:
-            response = {'error': "Email or password is incorrect."}
 
     cur.close()
     con.close()
-    return jsonify(response)
+    if not user or data['password'] != user[1]:
+        return jsonify(error="Email or password incorrect"), 500
+
+    # Set the user id in any way, maybe use flask-login
+    session["user_id"] = user[0]
+
+    access_token = create_access_token(identity=user[0])
+    return jsonify(access_token=access_token)
+
+
+# Logout
+@app.route('/logout')
+def logout():
+    # Unset the user id
+    # session.pop('user_id')
+    return redirect('http://localhost:3000/home', code=200)
 
 
 # Signin
@@ -239,7 +264,7 @@ def checklist_first():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID, hash trip id?
+    user_id = 1  # TODO: userID
 
     # Get the id of the first trip of the user
     cur.execute("SELECT t.tripID FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
@@ -265,7 +290,7 @@ def checklist(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID, hash trip id?
+    user_id = 1  # TODO: userID
 
     # If the trip does not exist or the user is not participating return error
     cur.execute("SELECT tripID FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, user_id))
@@ -273,7 +298,7 @@ def checklist(trip_id):
     if up is None:
         cur.close()
         con.close()
-        return jsonify(error="Trip not found"), 400  # TODO: Differ between trip not found / user not participating?
+        return jsonify(error="Trip not found"), 400
 
     if request.method == 'GET':
         # Get all items this user has for this trip, return them
@@ -562,7 +587,7 @@ def get_forms(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: user ID
+    user_id = 1  # TODO: check if user has access (usrID is not used..)
 
     if request.method == 'GET':
         cur.execute("SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, i.name, i.quantity, s.name, i.usrID, "
@@ -630,57 +655,16 @@ def get_forms(trip_id):
     return jsonify(response)
 
 
-# Update profile
-@app.route('/update', methods=['POST'])
-def update():
-    con = connect()
-    cur = con.cursor()
-    data = request.json['data']
-
-    cur.execute("UPDATE usr SET (username, email, password) = (%s, %s, %s) WHERE usrID = %s RETURNING usrID;",
-                (f"{data['username']}", f"{data['email']}", f"{data['password']}", f"{data['id']}"))
-    con.commit()
-    user = cur.fetchone()
-
-    if not user:
-        data = {'error': "Data could not be updated."}
-    else:
-        data = {'msg': "Update successful."}
-    cur.close()
-    con.close()
-    return jsonify(data)
-
-
-# Get usr data
-@app.route('/usrdata', methods=['GET'])
-def usr_data():
-    con = connect()
-    cur = con.cursor()
-
-    req = request
-    data = req.json['data']
-
-    cur.execute("SELECT * FROM usr WHERE usrID = %s", [f"{data['id']}"])
-    user = cur.fetchone()
-    response = []
-    if user:
-        response = {'username': user[1], 'email': user[2], 'password': user[3]}
-
-    cur.close()
-    con.close()
-    return jsonify(response)
-
-
 # GET / Update / Delete the account of the user
 @app.route('/account', methods=['GET', 'PUT', 'DELETE'])
-def profile():
+def account():
     con = connect()
     cur = con.cursor()
 
     user_id = 1  # TODO: userID
 
     # If the trip does not exist or the user is not participating return error
-    cur.execute("SELECT name, email FROM usr WHERE usrID = %s;", [user_id])
+    cur.execute("SELECT name, email, password FROM usr WHERE usrID = %s;", [user_id])
     user = cur.fetchall()
     if user is None:
         cur.close()
@@ -706,23 +690,24 @@ def profile():
 
     if request.method == 'GET':
         response = {
-            'userId': user[0],
-            'name': user[1],
-            'email': user[2],
+            'id': user_id,
+            'username': user[0],
+            'email': user[1],
+            'password': user[2],
             'friends': friends
         }
 
     elif request.method == 'PUT':
-        # Update the user (name, email, password?)
+        # Update the user (name, email, password, friends)
         data = request.json['data']
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = user[0]
-        if data['email'] is None:
+        if 'email' not in data or data['email'] is None:
             data['email'] = user[1]
 
-        # TODO: password?
+        # TODO: password, check that email is unique
 
         cur.execute("UPDATE usr SET (name, email) = (%s, %s) WHERE usrID = %s "
                     "RETURNING name, email;",
@@ -736,7 +721,7 @@ def profile():
             return jsonify(error="User could not be updated"), 500
 
         # Compare the lists of friends, update the friends of the db
-        if data['friends'] is None:
+        if 'friends' not in data or data['friends'] is None:
             data['friends'] = {}
         friends_old = set(friends)
         friends_new = set(data['friends'])

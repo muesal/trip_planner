@@ -37,23 +37,26 @@ function Login(props) {
     axios({
       method: "post",
       url: "http://localhost:5000/login",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      data: JSON.stringify(credentials),
+      data: JSON.stringify({'data':credentials}),
     })
       .then((response) => {
         if (response.data.error) {
           setAlertText(response.data.error);
           setAlert(true);
           setAlertType("error");
-        }
-        if (response.data.msg) {
-          setAlertText(response.data.msg);
+        } else {
+          setAlertText("Login successfull, redirecting you to your account");
           setAlert(true);
           setAlertType("success");
+
+          localStorage.setItem('currentUser', JSON.stringify(response.data.usrID));
+
           props.loggedHandler(true, response.data.usrID);
           setTimeout(() => {
             setRedirect(true);
-          }, 2000);
+          }, 1000);
         }
       })
       .catch((err) => {

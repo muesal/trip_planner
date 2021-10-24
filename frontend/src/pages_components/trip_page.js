@@ -140,6 +140,7 @@ function Trip(props) {
             axios({
                 method: "put",
                 url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
+                credentials: 'include',
                 data: {assignData},  // TODO: add userID
                 headers: { "Content-Type": "application/json" },
             })
@@ -165,6 +166,7 @@ function Trip(props) {
             axios({
                     method: "post",
                     url: "http://127.0.0.1:5000/forms/" + trip.id,
+                    credentials: 'include',
                     data: {fieldData},  // TODO: add userID
                     headers: { "Content-Type": "application/json" },
                 })
@@ -193,6 +195,7 @@ function Trip(props) {
         axios({
             method: "get",
             url: "http://127.0.0.1:5000/users",
+            credentials: 'include',
             data: {},  // TODO: add userID
             headers: { "Content-Type": "application/json" },
         })
@@ -212,6 +215,7 @@ function Trip(props) {
         axios({
                 method: "get",
                 url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
+                credentials: 'include',
                 data: {},  // TODO: add userID
                 headers: { "Content-Type": "application/json" },
             })
@@ -240,6 +244,7 @@ function Trip(props) {
         axios({
                 method: "get",
                 url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
+                credentials: 'include',
                 data: {},  // TODO: add userID
                 headers: { "Content-Type": "application/json" },
             })

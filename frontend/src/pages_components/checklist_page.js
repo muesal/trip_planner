@@ -46,6 +46,7 @@ function Checklist(props) {
             axios({
                 method: "post",
                 url: `http://127.0.0.1:5000/checklist/${selectedTrip}`,
+                credentials: 'include',
                 data: {data},
                 headers: {"Content-Type": "application/json"},
             })
@@ -64,6 +65,7 @@ function Checklist(props) {
         axios({
             method: "get",
             url: "http://127.0.0.1:5000/trips",
+            credentials: 'include',
             data: {},  // TODO: add userID
             headers: {"Content-Type": "application/json"},
         })
@@ -80,6 +82,7 @@ function Checklist(props) {
         axios({
             method: "get",
             url: `http://127.0.0.1:5000/checklist/${props.match.params.id}`,
+            credentials: 'include',
             data: {},  // TODO: add userID
             headers: {"Content-Type": "application/json"},
         })
