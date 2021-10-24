@@ -73,8 +73,9 @@ function Signin(props) {
     axios({
       method: "post",
       url: "http://localhost:5000/signin",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      data: JSON.stringify(credentials),
+      data: JSON.stringify({'data': credentials})
     })
       .then((response) => {
         if (response.data.error) {
@@ -87,6 +88,7 @@ function Signin(props) {
           setAlert(true);
           setAlertType("success");
           props.loggedHandler(true, response.data.usrID);
+          setRedirect(true)
           setTimeout(() => {
             setRedirect(true);
           }, 2000);

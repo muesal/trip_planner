@@ -31,16 +31,11 @@ function Main(props) {
     setNewTripialogOpen(false)
   }
 
-  /*const trips_hard = [
-      {id: 0, name: "Nydala", description: "Let's go to the lake, best place in town to see northern lights", date: "01/01/2022", duration: 3}, 
-      {id: 1, name: "Climbing Mont Fuji", description: "Travel to Japan", date: "30/10/2021", duration: 14},
-      {id: 2, name: "Hiking", description: "Hiking in sweden", date: "17/03/2022", duration: 2}
-  ]*/
-
   const getTrips = () => {
     axios({
       method: "get",
       url: "http://127.0.0.1:5000/trips",
+      credentials: 'include',
       data: {},  // TODO: add userID
       headers: { "Content-Type": "application/json" },
     })

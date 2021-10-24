@@ -14,6 +14,7 @@ function Checklist_redirect(props) {
         axios({
             method: "get",
             url: "http://127.0.0.1:5000/checklist",
+            credentials: 'include',
             data: {},  // TODO: add userID
             headers: {"Content-Type": "application/json"},
         })

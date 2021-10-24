@@ -31,8 +31,8 @@ function Account(props) {
 
     axios({
       method: "get",
-      url: "http://127.0.0.1:5000/usrdata",
-      data: JSON.stringify(usrdata),  // TODO: add userID
+      url: "http://127.0.0.1:5000/account",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
@@ -67,10 +67,11 @@ function Account(props) {
   const updateUser = async (credentials) => {
 
     axios({
-      method: "post",
-      url: "http://localhost:5000/update",
+      method: "put",
+      url: "http://localhost:5000/account",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      data: JSON.stringify(credentials),
+      data: JSON.stringify({'data': credentials}),
     })
       .then((response) => {
         if (response.data.error) {
@@ -115,6 +116,7 @@ function Account(props) {
             </Typography>
             <Grid item >
               <TextField
+                value={usernameForm}
                 variant="outlined"
                 label="Username"
                 onChange={e => setUsernameForm(e.target.value)}
@@ -122,6 +124,7 @@ function Account(props) {
             </Grid>
             <Grid item >
               <TextField
+                value={emailForm}
                 variant="outlined"
                 label="Email"
                 onChange={e => setEmailForm(e.target.value)}

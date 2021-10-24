@@ -35,6 +35,7 @@ function NewTripForm(props) {
             axios({
                 method: "post",
                 url: "http://127.0.0.1:5000/create-trip",
+                credentials: 'include',
                 data: bodyFormData,
                 headers: { "Content-Type": "multipart/form-data" },
             })
