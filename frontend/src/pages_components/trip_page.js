@@ -29,7 +29,7 @@ function Trip(props) {
     const [addingField, setAddingField] = useState(false)
     const [fieldData, setFieldData] = useState({})
     const [users, setUsers] = useState([])
-    const [formsCompletion, setFormsCompletion] = useState([])
+    const [formsCompletion, setFormsCompletion] = useState()
 
     useEffect(() => {
         getUsers()
@@ -332,7 +332,7 @@ function Trip(props) {
                         {days.map((day, index) => {
                             return (
                                 <div className="day" key={index}>
-                                    {isDayCompleted(index) ? 
+                                    {formsCompletion && isDayCompleted(index) ? 
                                     <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="inherit" >{day}</Button> : 
                                     <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="secondary" >{day}</Button> }
                                 </div>          
@@ -385,7 +385,7 @@ function Trip(props) {
                             Object.keys(fields[selectedDay]).map((form, index) => {
                             return (
                                 <div className="formButton" key={index}>
-                                    {formsCompletion[selectedDay][form] ? 
+                                    {formsCompletion && formsCompletion[selectedDay][form] ? 
                                         <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button> : 
                                         <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="secondary" >{fields[selectedDay][form][0].formName}</Button>}
                                 </div>          
