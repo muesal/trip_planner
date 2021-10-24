@@ -125,3 +125,8 @@ h1{
     justify-content: center;
 }
 
+
+.finishTripButton {
+    margin-top: 12px;
+    text-align: center;
+}

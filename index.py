@@ -86,7 +86,7 @@ def get_trips():
     cur.execute("SELECT t.tripID, t.name, k.name, t.start_date, t.duration, t.location, t.content "
                 "FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
                 "INNER JOIN kind k ON t.kindID = k.kindID "
-                "WHERE t.finished IS NOT False "
+                "WHERE t.finished IS NOT True "
                 "ORDER BY (t.start_date, t.tripID);",
                 [user_id])
     trips = cur.fetchmany(size=5)
@@ -451,6 +451,25 @@ def get_trip(trip_id):
 
     elif request.method == 'PUT':
         data = request.json['data']
+
+        # special case for finishing a trip 
+        if "finished" in data: 
+            cur.execute('''UPDATE trip SET finished = %s
+                            WHERE tripID = %s
+                            RETURNING tripid, finished;''',
+                        (data['finished'], trip_id)) 
+            con.commit()
+            trip = cur.fetchone()
+
+            if trip is None:
+                cur.close()
+                con.close()
+                return jsonify(error="Updated data could not be saved"), 500
+
+            cur.close()
+            con.close()
+            return jsonify({'id': trip[0], 'finished': trip[1]})
+
 
         cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s;", [trip_id])
         trip = cur.fetchone()

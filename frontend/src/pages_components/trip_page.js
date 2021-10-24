@@ -11,6 +11,7 @@ import { materialRenderers, materialCells, } from '@jsonforms/material-renderers
 import { retrieveKinds } from './new_trip_schema'
 import { retrieveSections, schema as fieldSchema, uiSchema as fieldUiSchema } from './new_field_schema';
 import { retrieveUsers } from './ressources_schema'
+import { useHistory } from "react-router-dom";
 import EditTripDialog from "./edit_trip_dialog"
 
 import axios from "axios";
@@ -30,6 +31,7 @@ function Trip(props) {
     const [fieldData, setFieldData] = useState({})
     const [users, setUsers] = useState([])
     const [formsCompletion, setFormsCompletion] = useState()
+    const history = useHistory();
 
     useEffect(() => {
         getUsers()
@@ -292,16 +294,40 @@ function Trip(props) {
         return true
     }
  
+    const finishTrip = () => {
+
+        let data = {finished: true}
+        axios({
+            method: "put",
+            url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
+            data: {data},  // TODO: add userID
+            headers: { "Content-Type": "application/json" },
+        })
+            .then((res) => {
+                history.push("/trips");
+                
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+
+        
+    }
+
     return (
 
             <main>
        
                 <div className="editTripButton">
-                    <Button onClick={handleOpen} variant="contained" color="inherit" >Edit Trip</Button>
+                    <Button onClick={handleOpen} variant="contained" color="primary" >Edit Trip</Button>
 
                     {tripEditDialogOpen && 
                         <EditTripDialog handleClose={handleClose} trip={trip} getTrip={getTrip} getFields={getFields} />}
                 </div>
+
+                <div className="finishTripButton">
+                    <Button onClick={finishTrip} variant="contained" color="inherit" >Finish Trip</Button>
+                </div> 
 
                 <div className="tripDetails">
 
