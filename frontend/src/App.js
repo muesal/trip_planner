@@ -8,7 +8,6 @@ import Person from '@material-ui/icons/Person';
 import "./App.css";
 import Trips from "./pages_components/trips_page"
 import Checklist from "./pages_components/checklist_page"
-import ChecklistRedirect from "./pages_components/checklist_redirect"
 import Account from "./pages_components/account_page";
 import Trip from "./pages_components/trip_page";
 
@@ -17,11 +16,14 @@ import Login from './pages_components/login_page';
 import Signin from './pages_components/signin_page';
 import Home from './pages_components/home_page';
 
+import {logout, useAuth} from './auth/index'
+
+
 function App() {
 
   const [apiData, setApiData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [logged, setLogged] = useState(false);
+  const [logged] = useAuth()
   const [usrID, setUsrID] = useState("");
   const history = useHistory();
 
@@ -30,7 +32,6 @@ function App() {
   }, []);
 
   const loggedHandler = (loged, id) => {
-    setLogged(loged);
     setUsrID(id);
   }
 
@@ -78,7 +79,7 @@ function App() {
             </div>
 
             <div className="menuButton">
-              <Button component={Link} to="/checklists" variant="contained" color="primary">
+              <Button component={Link} to="/checklist" variant="contained" color="primary">
                 Checklist
               </Button>
             </div>
@@ -101,7 +102,13 @@ function App() {
                 My Account
               </Button>
             </div>
-          </div>) : (
+            <div className="menuButton">
+              <Button onClick={() => logout()} component={Link} to="/home" variant="contained" color="primary">
+                Logout
+              </Button>
+            </div>
+          </div>
+        ) : (
           <div className="accountButton">
             <div className="menuButton">
               <Button component={Link} to="/signin" variant="contained" color="primary">

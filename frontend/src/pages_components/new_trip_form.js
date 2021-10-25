@@ -37,7 +37,10 @@ function NewTripForm(props) {
                 url: "http://127.0.0.1:5000/create-trip",
                 credentials: 'include',
                 data: bodyFormData,
-                headers: { "Content-Type": "multipart/form-data" },
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     props.getTrips();

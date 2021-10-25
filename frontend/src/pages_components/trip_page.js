@@ -105,7 +105,7 @@ function Trip(props) {
 
         setFormOK(updateSchemas(form))
 
-        
+
 
     }
 
@@ -141,8 +141,11 @@ function Trip(props) {
                 method: "put",
                 url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
                 credentials: 'include',
-                data: {assignData},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
+                data: {assignData},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     getFields()
@@ -167,8 +170,11 @@ function Trip(props) {
                     method: "post",
                     url: "http://127.0.0.1:5000/forms/" + trip.id,
                     credentials: 'include',
-                    data: {fieldData},  // TODO: add userID
-                    headers: { "Content-Type": "application/json" },
+                    data: {fieldData},
+                    headers: {
+                        "Content-Type": "application/json",
+                        'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                    },
                 })
                     .then((res) => {
                         setAddingField(false)
@@ -196,8 +202,11 @@ function Trip(props) {
             method: "get",
             url: "http://127.0.0.1:5000/users",
             credentials: 'include',
-            data: {},  // TODO: add userID
-            headers: { "Content-Type": "application/json" },
+            data: {},
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
         })
             .then((res) => {
                 retrieveUsers(res.data)
@@ -216,8 +225,11 @@ function Trip(props) {
                 method: "get",
                 url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
                 credentials: 'include',
-                data: {},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
+                data: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     
@@ -245,8 +257,11 @@ function Trip(props) {
                 method: "get",
                 url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
                 credentials: 'include',
-                data: {},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
+                data: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     setTrip(res.data)
