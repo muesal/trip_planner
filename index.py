@@ -121,11 +121,13 @@ def signin():
 
 # Create a new trip.
 @app.route('/create-trip', methods=['POST'])
+@flask_praetorian.auth_required
 def add_trip():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: get user id
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
     data = request.form.to_dict()
 
     cur.execute("SELECT kindID FROM kind WHERE name = %s;", [f"{data['kind']}"])
@@ -164,11 +166,13 @@ def add_trip():
 
 # Return 5 soonest trips this user participates in
 @app.route('/trips', methods=['GET'])
+@flask_praetorian.auth_required
 def get_trips():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: get user id: session['id']?
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     cur.execute("SELECT t.tripID, t.name, k.name, t.start_date, t.duration, t.location, t.content "
                 "FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
@@ -274,12 +278,14 @@ def get_sections():
 
 # return the checklist for the first trip
 @app.route('/checklist', methods=['GET'])
+@flask_praetorian.auth_required
 def checklist_first():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID
-
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
+    
     # Get the id of the first trip of the user
     cur.execute("SELECT t.tripID FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
                 "WHERE t.finished IS NOT False "
@@ -297,6 +303,7 @@ def checklist_first():
 
 # return the checklist to the given trip for that user
 @app.route('/checklist/<trip_id>', methods=['GET', 'PUT', 'POST', 'DELETE'])
+@flask_praetorian.auth_required
 def checklist(trip_id):
     if trip_id is None:
         return ""
@@ -304,7 +311,8 @@ def checklist(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     # If the trip does not exist or the user is not participating return error
     cur.execute("SELECT tripID FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, user_id))
@@ -454,11 +462,13 @@ def checklist(trip_id):
 
 # Edit / see trip
 @app.route('/trip/<trip_id>', methods=['GET', 'PUT', 'DELETE'])
+@flask_praetorian.auth_required
 def get_trip(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     if request.method == 'GET':
         # TODO: only creator sohuld see 'edit' button
@@ -616,11 +626,13 @@ def get_trip(trip_id):
 
 # Get form 
 @app.route('/forms/<trip_id>', methods=['GET', 'POST', 'PUT'])
+@flask_praetorian.auth_required
 def get_forms(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: check if user has access (usrID is not used..)
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     if request.method == 'GET':
         cur.execute("SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, i.name, i.quantity, s.name, i.usrID, "
@@ -693,16 +705,17 @@ def get_forms(trip_id):
 
 # GET / Update / Delete the account of the user
 @app.route('/account', methods=['GET', 'PUT', 'DELETE'])
-@flask_praetorian.auth_required # This does not work, as the token is invalid
+@flask_praetorian.auth_required
 def account():
     con = connect()
     cur = con.cursor()
 
-    user_id = get_jwt_identity()  # TODO: userID
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     # If the trip does not exist or the user is not participating return error
-    cur.execute("SELECT name, email, password FROM usr WHERE usrID = %s;", [user_id])
-    user = cur.fetchall()
+    cur.execute("SELECT name, email, hashed_password FROM usr WHERE usrID = %s;", [user_id])
+    user = cur.fetchone()
     if user is None:
         cur.close()
         con.close()
@@ -711,14 +724,14 @@ def account():
     # Get all friends TODO: as sql function
     cur.execute("SELECT usrID1, u.name "
                 "FROM friend f "
-                "JOIN usr u ON u.userID = f.userID1 "
-                "WHERE userID2 = %s "
+                "JOIN usr u ON u.usrID = f.usrID1 "
+                "WHERE usrID2 = %s "
                 "UNION "
                 "SELECT usrID2, u.name "
                 "FROM friend f "
-                "JOIN usr u ON u.userID = f.userID21 "
-                "WHERE userID1 = %s;",
-                [user_id])
+                "JOIN usr u ON u.usrID = f.usrID2 "
+                "WHERE usrID1 = %s;",
+                (user_id, user_id))
     f = cur.fetchall()
 
     friends = {}

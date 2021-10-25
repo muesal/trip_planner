@@ -5,8 +5,11 @@ export async function retrieveSections() {
     axios({
             method: "get",
             url: "http://127.0.0.1:5000/sections",
-            data: {},  // TODO: add userID
-            headers: { "Content-Type": "application/json" },
+            data: {},
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
         })
             .then((res) => {
                 let sections = []
