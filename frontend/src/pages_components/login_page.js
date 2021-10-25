@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import Box from '@mui/material/Box';
 import { Button, Container, Grid, TextField, Typography } from "@mui/material";
 import axios from 'axios';
@@ -8,54 +8,56 @@ import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { Redirect } from "react-router";
+import { useState } from 'react';
+import {login} from "../auth/index"
 
-class Login extends Component {
+function Login(props) {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      emailForm: "",
-      passwordForm: "",
-      alert: false,
-      alertText: "",
-      alertType: "",
-      redirect: false
-    }
-  }
+  const [emailForm, setEmailForm] = useState("");
+  const [passwordForm, setPasswordForm] = useState("");
+  const [alert, setAlert] = useState(false);
+  const [alertText, setAlertText] = useState("");
+  const [alertType, setAlertType] = useState("");
+  const [redirect, setRedirect] = useState(false);
 
 
-  handleLogin = async (e) => {
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    var email = this.state.emailForm;
-    var password = this.state.passwordForm;
+    var email = emailForm;
+    var password = passwordForm;
     var userData = {
       email,
       password
     };
-    this.loginUser(userData);
+    loginUser(userData);
   }
 
-  async loginUser(credentials) {
+  const loginUser = async (credentials) => {
 
     axios({
       method: "post",
       url: "http://localhost:5000/login",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      data: JSON.stringify(credentials),
+      data: JSON.stringify({'data':credentials}),
     })
       .then((response) => {
         if (response.data.error) {
-          this.setState({ alertText: response.data.error });
-          this.setState({ alert: true });
-          this.setState({ alertType: "error" });
-        }
-        if (response.data.msg) {
-          this.setState({ alertText: response.data.msg });
-          this.setState({ alert: true })
-          this.setState({ alertType: "success" });
+          setAlertText(response.data.error);
+          setAlert(true);
+          setAlertType("error");
+        } else {
+          setAlertText("Login successfull, redirecting you to your account");
+          setAlert(true);
+          setAlertType("success");
+
+          login(response.data.access_token)
+
+          props.loggedHandler(true, response.data.access_token);
           setTimeout(() => {
-            this.setState({ redirect: true });
-          }, 2000);
+            setRedirect(true);
+          }, 1000);
         }
       })
       .catch((err) => {
@@ -64,93 +66,93 @@ class Login extends Component {
   }
 
 
-  render() {
-    if (this.state.redirect) {
-      return <Redirect to={'/account'}></Redirect>;
-    }
+  if (redirect) {
+    return <Redirect to={'/account'}></Redirect>;
+  }
 
-    return (
-      <Container component="main" maxWidth="xs">
 
-        <Box
+  return (
+    <Container component="main" maxWidth="xs">
+
+      <Box
+        sx={{
+          display: "flex",
+          marginTop: "22vh",
+          justifyContent: "center",
+          bgcolor: "#94AAF7",
+          border: 1,
+          borderRadius: 1
+        }}
+      >
+        <Box component="form"
           sx={{
             display: "flex",
-            marginTop: "22vh",
             justifyContent: "center",
-            bgcolor: "#94AAF7",
-            border: 1,
-            borderRadius: 1
+            mt: 3,
+            mb: 3
           }}
         >
-          <Box component="form"
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mt: 3,
-              mb: 3
-            }}
-          >
-            <Grid container spacing="10" direction="column" alignItems="center"  >
-              <Typography component="h1" variant="h5">
-                Login
-              </Typography>
-              <Grid item >
-                <TextField
-                  variant="outlined"
-                  label="Email"
-                  onChange={e => this.setState({ emailForm: e.target.value })}
-                />
+          <Grid container spacing="10" direction="column" alignItems="center"  >
+            <Typography component="h1" variant="h5">
+              Login
+            </Typography>
+            <Grid item >
+              <TextField
+                variant="outlined"
+                label="Email"
+                onChange={e => setEmailForm( e.target.value )}
+              />
+            </Grid>
+            <Grid item >
+              <TextField
+                variant="outlined"
+                label="Password"
+                type="password"
+                onChange={e => setPasswordForm( e.target.value )}
+              />
+            </Grid>
+            <Grid container item>
+              <Grid item xs>
+                <Link to={{ pathname: "/signin" }}>Sign in</Link>
               </Grid>
-              <Grid item >
-                <TextField
-                  variant="outlined"
-                  label="Password"
-                  type="password"
-                  onChange={e => this.setState({ passwordForm: e.target.value })}
-                />
-              </Grid>
-              <Grid container item>
-                <Grid item xs>
-                  <Link to={{ pathname: "/signin" }}>Sign in</Link>
-                </Grid>
-                <Grid item xs></Grid>
-                <Grid item xs>
-                  <Button
-                    type="button"
-                    variant="contained"
-                    onClick={this.handleLogin}
-                  >
-                    Login
-                  </Button>
-                </Grid>
+              <Grid item xs></Grid>
+              <Grid item xs>
+                <Button
+                  type="button"
+                  variant="contained"
+                  onClick={handleLogin}
+                >
+                  Login
+                </Button>
               </Grid>
             </Grid>
-          </Box>
+          </Grid>
         </Box>
-        <Box sx={{ mt: "2vh" }}>
-          <Collapse in={this.state.alert}>
-            <Alert severity={this.state.alertType || "warning"}
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    this.setState({ alert: false });
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-              sx={{ mb: 2 }}
-            >
-              {this.state.alertText}
-            </Alert>
-          </Collapse>
-        </Box>
-      </Container>
-    );
-  }
+      </Box>
+      <Box sx={{ mt: "2vh" }}>
+        <Collapse in={alert}>
+          <Alert severity={alertType || "warning"}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setAlert(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            {alertText}
+          </Alert>
+        </Collapse>
+      </Box>
+    </Container>
+  );
+
 }
 
 export default Login;

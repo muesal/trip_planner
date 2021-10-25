@@ -1,20 +1,35 @@
 from flask import Flask, jsonify, request, redirect, url_for
+import flask_praetorian
 from flask_cors import CORS
+from flask_jwt_extended import get_jwt_identity, jwt_required, JWTManager, set_access_cookies
 from dotenv import load_dotenv
 import psycopg2
 import os
+
+from models import db, User
 
 load_dotenv()
 
 # get info about the Database from .env
 DATABASE = os.getenv('DATABASE')
-DATABASE_USERNAME = os.getenv('DATABSE_USERNAME')
+DATABASE_USERNAME = os.getenv('DATABASE_USERNAME')
 DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
 
-app = Flask(__name__)
 
-# CORS enables access to the database
-CORS(app)
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'qasdtfzghjbvcftdr567z8uijnhbvgfcdres45r6t7z8u9i0o'
+app.config["JWT_SECRET_KEY"] = 'qAWQ3W4E5Ra3w4erdfrt67zughu8z7t6frdesw34e5r6tzughji'
+app.config["JWT_TOKEN_LOCATION"] ="cookies"
+app.config['JWT_COOKIE_SECURE'] = False
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] =\
+    "postgresql://" + DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@localhost:5432/" + DATABASE
+
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, support_credentials=True)
+jwt = JWTManager(app)
+guard = flask_praetorian.Praetorian()
+guard.init_app(app, User)
+db.init_app(app)
 
 
 # Get the connection to the database
@@ -27,6 +42,10 @@ def connect():
     return con
 
 
+with app.app_context():
+    db.create_all()
+     # TODO: put stuff from below here, execute if no useres in db
+    db.session.commit()
 # set up  the database
 connection = connect()
 cursor = connection.cursor()
@@ -38,18 +57,77 @@ cursor.close()
 connection.close()
 
 
+@app.after_request
+def middleware_for_response(response):
+    # Allowing the credentials in the response.
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+
 @app.route('/')
 def home():
     return ''
 
 
+# Login
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json['data']
+    user = guard.authenticate(data['email'], data['password'])
+    return {'access_token': guard.encode_jwt_token(user)}, 200
+
+
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    old_token = request.get_data()
+    new_token = guard.refresh_jwt_token(old_token)
+    return {'access_token': new_token}, 200
+
+
+# Logout
+@app.route('/logout')
+def logout():
+    # Unset the user id
+    # session.pop('user_id')
+    return redirect('http://localhost:3000/home', code=200)
+
+
+# Signin
+@app.route('/signin', methods=['POST'])
+def signin():
+    con = connect()
+    cur = con.cursor()
+    data = request.json['data']
+
+    # Check if email already in database: must be unique
+    cur.execute("SELECT * FROM usr WHERE email = %s;", [f"{data['email']}"])
+    users = cur.fetchall()
+
+    if users:
+        response = {'error': "The email already exist."}
+    else:
+        cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;",
+                    (f"{data['username']}", f"{data['email']}", f"{data['password']}"))
+        con.commit()
+        user_id = cur.fetchone()
+        if user_id:
+            response = {'msg': "You signin succesfully. Redirecting to your account page.", 'usrID': user_id}
+        else:
+            response = {'msg': "You could not be signed in (Serer Error)"}
+    cur.close()
+    con.close()
+    return jsonify(response)
+
+
 # Create a new trip.
 @app.route('/create-trip', methods=['POST'])
+@flask_praetorian.auth_required
 def add_trip():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: get user id
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
     data = request.form.to_dict()
 
     cur.execute("SELECT kindID FROM kind WHERE name = %s;", [f"{data['kind']}"])
@@ -88,11 +166,13 @@ def add_trip():
 
 # Return 5 soonest trips this user participates in
 @app.route('/trips', methods=['GET'])
+@flask_praetorian.auth_required
 def get_trips():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: get user id: session['id']?
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     cur.execute("SELECT t.tripID, t.name, k.name, t.start_date, t.duration, t.location, t.content "
                 "FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
@@ -198,12 +278,14 @@ def get_sections():
 
 # return the checklist for the first trip
 @app.route('/checklist', methods=['GET'])
+@flask_praetorian.auth_required
 def checklist_first():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID, hash trip id?
-
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
+    
     # Get the id of the first trip of the user
     cur.execute("SELECT t.tripID FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
                 "WHERE t.finished IS NOT False "
@@ -218,53 +300,10 @@ def checklist_first():
 
     return jsonify(trip[0])
 
-# Login 
-@app.route('/login', methods=['POST'])
-def login():
-    con = connect()
-    cur = con.cursor()
-    email = request.json['email']
-    passwd = request.json['password']
-    cur.execute(
-        "SELECT * FROM usr WHERE email = %s",(email,))
-    users = cur.fetchall()
-    if not users:
-        data = {'error': "Email or password is incorrect."}
-    else:
-      if (passwd == users[0][3]):
-        data = {'msg': "You login succesfully. Redirecting to your account page."}
-      else:
-        data = {'error': "Email or password is incorrect."}   
-    cur.close()
-    con.close()     
-    return jsonify(data)
-
-# Signin
-@app.route('/signin', methods=['POST'])
-def signin():
-    con = connect()
-    cur = con.cursor()
-    username = request.json['username']
-    email = request.json['email']
-    passwd = request.json['password']
-    cur.execute(
-        "SELECT * FROM usr WHERE email = %s",(email,))
-    users = cur.fetchall()
-    
-    if users:
-        data = {'error': "The email already exist."}
-    else:
-      cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;", (username, email, passwd))
-      con.commit()
-      data = {'msg': "You signin succesfully. Redirecting to your account page."}  
-    cur.close()
-    con.close()
-    return jsonify(data)
-
-
 
 # return the checklist to the given trip for that user
 @app.route('/checklist/<trip_id>', methods=['GET', 'PUT', 'POST', 'DELETE'])
+@flask_praetorian.auth_required
 def checklist(trip_id):
     if trip_id is None:
         return ""
@@ -272,7 +311,8 @@ def checklist(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID, hash trip id?
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     # If the trip does not exist or the user is not participating return error
     cur.execute("SELECT tripID FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, user_id))
@@ -280,7 +320,7 @@ def checklist(trip_id):
     if up is None:
         cur.close()
         con.close()
-        return jsonify(error="Trip not found"), 400  # TODO: Differ between trip not found / user not participating?
+        return jsonify(error="Trip not found"), 400
 
     if request.method == 'GET':
         # Get all items this user has for this trip, return them
@@ -422,11 +462,13 @@ def checklist(trip_id):
 
 # Edit / see trip
 @app.route('/trip/<trip_id>', methods=['GET', 'PUT', 'DELETE'])
+@flask_praetorian.auth_required
 def get_trip(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     if request.method == 'GET':
         # TODO: only creator sohuld see 'edit' button
@@ -584,11 +626,13 @@ def get_trip(trip_id):
 
 # Get form 
 @app.route('/forms/<trip_id>', methods=['GET', 'POST', 'PUT'])
+@flask_praetorian.auth_required
 def get_forms(trip_id):
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: user ID
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     if request.method == 'GET':
         cur.execute("SELECT fo.formID, fo.name, fo.dayOfTrip, fi.fieldID, i.name, i.quantity, s.name, i.usrID, "
@@ -625,7 +669,7 @@ def get_forms(trip_id):
             })
             counter += 1
 
-    elif request.method == 'POST': 
+    elif request.method == 'POST':
 
         data = request.json['fieldData']
 
@@ -661,15 +705,17 @@ def get_forms(trip_id):
 
 # GET / Update / Delete the account of the user
 @app.route('/account', methods=['GET', 'PUT', 'DELETE'])
-def profile():
+@flask_praetorian.auth_required
+def account():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID, hash trip id?
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
 
     # If the trip does not exist or the user is not participating return error
-    cur.execute("SELECT name, email FROM usr WHERE usrID = %s;", [user_id])
-    user = cur.fetchall()
+    cur.execute("SELECT name, email, hashed_password FROM usr WHERE usrID = %s;", [user_id])
+    user = cur.fetchone()
     if user is None:
         cur.close()
         con.close()
@@ -678,14 +724,14 @@ def profile():
     # Get all friends TODO: as sql function
     cur.execute("SELECT usrID1, u.name "
                 "FROM friend f "
-                "JOIN usr u ON u.userID = f.userID1 "
-                "WHERE userID2 = %s "
+                "JOIN usr u ON u.usrID = f.usrID1 "
+                "WHERE usrID2 = %s "
                 "UNION "
                 "SELECT usrID2, u.name "
                 "FROM friend f "
-                "JOIN usr u ON u.userID = f.userID21 "
-                "WHERE userID1 = %s;",
-                [user_id])
+                "JOIN usr u ON u.usrID = f.usrID2 "
+                "WHERE usrID1 = %s;",
+                (user_id, user_id))
     f = cur.fetchall()
 
     friends = {}
@@ -694,23 +740,24 @@ def profile():
 
     if request.method == 'GET':
         response = {
-            'userId': user[0],
-            'name': user[1],
-            'email': user[2],
+            'id': user_id,
+            'username': user[0],
+            'email': user[1],
+            'password': user[2],
             'friends': friends
         }
 
     elif request.method == 'PUT':
-        # Update the user (name, email, password?)
+        # Update the user (name, email, password, friends)
         data = request.json['data']
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = user[0]
-        if data['email'] is None:
+        if 'email' not in data or data['email'] is None:
             data['email'] = user[1]
 
-        # TODO: password?
+        # TODO: password, check that email is unique
 
         cur.execute("UPDATE usr SET (name, email) = (%s, %s) WHERE usrID = %s "
                     "RETURNING name, email;",
@@ -724,7 +771,7 @@ def profile():
             return jsonify(error="User could not be updated"), 500
 
         # Compare the lists of friends, update the friends of the db
-        if data['friends'] is None:
+        if 'friends' not in data or data['friends'] is None:
             data['friends'] = {}
         friends_old = set(friends)
         friends_new = set(data['friends'])

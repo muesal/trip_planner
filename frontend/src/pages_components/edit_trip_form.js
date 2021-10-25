@@ -26,8 +26,12 @@ function EditTripForm(props) {
             axios({
                     method: "put",
                     url: "http://127.0.0.1:5000/trip/" + props.trip.id,
-                    data: {data},  // TODO: add userID
-                    headers: { "Content-Type": "application/json" },
+                    credentials: 'include',
+                    data: {data},
+                    headers: {
+                        "Content-Type": "application/json",
+                        'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                    },
                 })
                     .then((res) => {
                         console.log(res);
@@ -45,19 +49,27 @@ function EditTripForm(props) {
 
 
     const deleteTrip = () => {
+
         if (window.confirm("Confirm deletion")) {
             axios({
-                    method: "delete",
-                    url: "http://127.0.0.1:5000/trip/" + props.trip.id,
-                    data: {},  // TODO: add userID
-                    headers: { "Content-Type": "application/json" },
+                method: "delete",
+                url: "http://127.0.0.1:5000/trip/" + props.trip.id,
+                credentials: 'include',
+                data: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
+            })
+                .then((res) => {
+                    console.log(res);
                 })
-                    .then((res) => {
-                        console.log(res);
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                    });
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
             props.handleClose();
             history.push("/trips");
         }

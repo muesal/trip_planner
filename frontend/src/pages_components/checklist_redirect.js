@@ -14,8 +14,12 @@ function Checklist_redirect(props) {
         axios({
             method: "get",
             url: "http://127.0.0.1:5000/checklist",
-            data: {},  // TODO: add userID
-            headers: {"Content-Type": "application/json"},
+            credentials: 'include',
+            data: {},
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
         })
             .then((res) => {
                 setTrip(res.data);

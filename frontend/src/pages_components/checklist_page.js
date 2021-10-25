@@ -46,8 +46,12 @@ function Checklist(props) {
             axios({
                 method: "post",
                 url: `http://127.0.0.1:5000/checklist/${selectedTrip}`,
+                credentials: 'include',
                 data: {data},
-                headers: {"Content-Type": "application/json"},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     props.getData()
@@ -64,8 +68,12 @@ function Checklist(props) {
         axios({
             method: "get",
             url: "http://127.0.0.1:5000/trips",
-            data: {},  // TODO: add userID
-            headers: {"Content-Type": "application/json"},
+            credentials: 'include',
+            data: {},
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
         })
             .then((res) => {
                 setSelectedTrip(res.data[0].id)
@@ -80,8 +88,12 @@ function Checklist(props) {
         axios({
             method: "get",
             url: `http://127.0.0.1:5000/checklist/${props.match.params.id}`,
-            data: {},  // TODO: add userID
-            headers: {"Content-Type": "application/json"},
+            credentials: 'include',
+            data: {},
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
         })
             .then((res) => {
                 console.log(res.data)

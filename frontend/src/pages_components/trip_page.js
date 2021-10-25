@@ -114,7 +114,7 @@ function Trip(props) {
 
         setFormOK(updateSchemas(form))
 
-        
+
 
     }
 
@@ -149,8 +149,12 @@ function Trip(props) {
             axios({
                 method: "put",
                 url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
-                data: {assignData},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
+                credentials: 'include',
+                data: {assignData},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     getFields()
@@ -174,8 +178,12 @@ function Trip(props) {
             axios({
                     method: "post",
                     url: "http://127.0.0.1:5000/forms/" + trip.id,
-                    data: {fieldData},  // TODO: add userID
-                    headers: { "Content-Type": "application/json" },
+                    credentials: 'include',
+                    data: {fieldData},
+                    headers: {
+                        "Content-Type": "application/json",
+                        'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                    },
                 })
                     .then((res) => {
                         setAddingField(false)
@@ -203,8 +211,12 @@ function Trip(props) {
         axios({
             method: "get",
             url: "http://127.0.0.1:5000/users",
-            data: {},  // TODO: add userID
-            headers: { "Content-Type": "application/json" },
+            credentials: 'include',
+            data: {},
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
         })
             .then((res) => {
                 retrieveUsers(res.data)
@@ -222,8 +234,12 @@ function Trip(props) {
         axios({
                 method: "get",
                 url: `http://127.0.0.1:5000/forms/${props.match.params.id}`,
-                data: {},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
+                credentials: 'include',
+                data: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     
@@ -250,8 +266,12 @@ function Trip(props) {
         axios({
                 method: "get",
                 url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
-                data: {},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
+                credentials: 'include',
+                data: {},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
                 .then((res) => {
                     setTrip(res.data)

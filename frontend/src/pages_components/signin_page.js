@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import Box from '@mui/material/Box';
 import { Button, Container, Grid, TextField, Typography } from "@mui/material";
 import axios from 'axios';
@@ -8,89 +8,90 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { Redirect } from "react-router";
 
-class Signin extends Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      usernameForm: "",
-      emailForm: "",
-      passwordForm: "",
-      confPasswordForm: "",
-      usernameValid: true,
-      emailValid: true,
-      passValid: true,
-      confPassValid: true,
-      alert: false,
-      alertText: "",
-      alertType: "",
-      redirect: false
-    }
-  }
+function Signin(props) {
 
-  async checkEmail(email) {
+  const [usernameForm, setUsernameForm] = useState("");
+  const [emailForm, setEmailForm] = useState("");
+  const [passwordForm, setPasswordForm] = useState("");
+  const [confPasswordForm, setConfPasswordForm] = useState("");
+  const [usernameValid, setUsernameValid] = useState(true);
+  const [emailValid, setEmailValid] = useState(true);
+  const [passValid, setPasswordValid] = useState(true);
+  const [confPassValid, setConfPasswordValid] = useState(true);
+  const [alert, setAlert] = useState(false);
+  const [alertText, setAlertText] = useState("");
+  const [alertType, setAlertType] = useState("");
+  const [redirect, setRedirect] = useState(false);
+
+
+
+  const checkEmail = async (email) => {
     var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
   }
-  async checkPassword(registerPasswd) {
+  const checkPassword = async (registerPasswd) => {
     var passw = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.:(),;])[A-Za-z\d@$!%*?&.:(),;]{7,25}$/;
     return passw.test(registerPasswd);
   }
 
-  handleChanges = async (e) => {
+  const handleChanges = async (e) => {
     e.preventDefault();
-    if (this.state.usernameForm.length < 8) {
-      this.setState({ usernameValid: false });
+    if (usernameForm.length < 8) {
+      setUsernameValid(false);
     }
     else {
-      this.setState({ usernameValid: true });
+      setUsernameValid(true);
     }
-    this.setState({ emailValid: await this.checkEmail(this.state.emailForm) });
-    this.setState({ passValid: await this.checkPassword(this.state.passwordForm) });
-    if (!this.state.passValid || (this.state.confPasswordForm !== this.state.passwordForm)) {
-      this.setState({ confPassValid: false });
+    setEmailValid(await checkEmail(emailForm));
+    setPasswordValid(await checkPassword(passwordForm));
+    if (!passValid || (confPasswordForm !== passwordForm)) {
+      setConfPasswordValid(false);
     }
     else {
-      this.setState({ confPassValid: true });
+      setConfPasswordValid(true);
     }
-    if (this.state.usernameValid && this.state.emailValid && this.state.passValid && this.state.confPassValid) {
-      this.handleRegister();
+    if (usernameValid && emailValid && passValid && confPassValid) {
+      handleRegister();
     }
   }
 
-  async handleRegister() {
-    var username = this.state.usernameForm;
-    var email = this.state.emailForm;
-    var password = this.state.passwordForm;
+  const handleRegister = async () => {
+    var username = usernameForm;
+    var email = emailForm;
+    var password = passwordForm;
     var userData = {
       username,
       email,
       password
     };
-    this.registerUser(userData);
+    registerUser(userData);
   }
 
-  async registerUser(credentials) {
+  const registerUser = async (credentials) => {
 
     axios({
       method: "post",
       url: "http://localhost:5000/signin",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      data: JSON.stringify(credentials),
+      data: JSON.stringify({'data': credentials})
     })
       .then((response) => {
         if (response.data.error) {
-          this.setState({ alertText: response.data.error });
-          this.setState({ alert: true });
-          this.setState({ alertType: "error"});
+          setAlertText(response.data.error);
+          setAlert(true);
+          setAlertType("error");
         }
         if (response.data.msg) {
-          this.setState({ alertText: response.data.msg });
-          this.setState({ alert: true })
-          this.setState({ alertType: "success"});
+          setAlertText(response.data.msg);
+          setAlert(true);
+          setAlertType("success");
+          props.loggedHandler(true, response.data.usrID);
+          setRedirect(true)
           setTimeout(() => {
-            this.setState({ redirect: true});
-          }, 2000); 
+            setRedirect(true);
+          }, 2000);
         }
       })
       .catch((err) => {
@@ -98,110 +99,109 @@ class Signin extends Component {
       });
   }
 
-  render() {
-    if (this.state.redirect){
-      return <Redirect to={'/account'}></Redirect>;
-    }
-    return (
-      
-      <Container component="main" maxWidth="xs">
+  if (redirect) {
+    return <Redirect to={'/account'}></Redirect>;
+  }
+  return (
 
-        <Box
+    <Container component="main" maxWidth="xs">
+
+      <Box
+        sx={{
+          display: "flex",
+          marginTop: 12,
+          justifyContent: "center",
+          bgcolor: "#94AAF7",
+          border: 1,
+          borderRadius: 1
+        }}
+      >
+        <Box component="form"
           sx={{
             display: "flex",
-            marginTop: 12,
             justifyContent: "center",
-            bgcolor: "#94AAF7",
-            border: 1,
-            borderRadius: 1
+            mt: 3,
+            mb: 3
           }}
         >
-          <Box component="form"
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mt: 3,
-              mb: 3
-            }}
-          >
-            <Grid container spacing="10" direction="column" alignItems="center"  >
-              <Typography component="h1" variant="h5">
-                Sign in
-              </Typography>
-              <Grid item >
-                <TextField
-                  variant="outlined"
-                  label="Username"
-                  onChange={e => this.setState({ usernameForm: e.target.value })}
-                  error={!this.state.usernameValid}
-                  helperText={!this.state.usernameValid ? "The username is too short!" : ""}
-                />
-              </Grid>
-              <Grid item >
-                <TextField
-                  variant="outlined"
-                  label="Email"
-                  onChange={e => this.setState({ emailForm: e.target.value })}
-                  error={!this.state.emailValid}
-                  helperText={!this.state.emailValid ? "You must use a valid email." : ""}
-                />
-              </Grid>
-              <Grid item >
-                <TextField
-                  variant="outlined"
-                  label="Password"
-                  type="password"
-                  onChange={e => this.setState({ passwordForm: e.target.value })}
-                  error={!this.state.passValid}
-                  helperText={!this.state.passValid ? "Your password is too weak." : ""}
-                />
-              </Grid>
-              <Grid item >
-                <TextField
-                  variant="outlined"
-                  label="Confirm Password"
-                  type="password"
-                  onChange={e => this.setState({ confPasswordForm: e.target.value })}
-                  error={!this.state.confPassValid}
-                  helperText={!this.state.confPassValid ? "Your passwords must match." : ""}
-                />
-              </Grid>
-              <Grid item>
-                <Button
-                  type="button"
-                  variant="contained"
-                  onClick={this.handleChanges}
-                >
-                  Sign Up
-                </Button>
-              </Grid>
+          <Grid container spacing="10" direction="column" alignItems="center"  >
+            <Typography component="h1" variant="h5">
+              Sign in
+            </Typography>
+            <Grid item >
+              <TextField
+                variant="outlined"
+                label="Username"
+                onChange={e => setUsernameForm( e.target.value )}
+                error={!usernameValid}
+                helperText={!usernameValid ? "The username is too short!" : ""}
+              />
             </Grid>
-          </Box>
+            <Grid item >
+              <TextField
+                variant="outlined"
+                label="Email"
+                onChange={e => setEmailForm( e.target.value )}
+                error={!emailValid}
+                helperText={!emailValid ? "You must use a valid email." : ""}
+              />
+            </Grid>
+            <Grid item >
+              <TextField
+                variant="outlined"
+                label="Password"
+                type="password"
+                onChange={e => setPasswordForm( e.target.value )}
+                error={!passValid}
+                helperText={!passValid ? "Your password is too weak." : ""}
+              />
+            </Grid>
+            <Grid item >
+              <TextField
+                variant="outlined"
+                label="Confirm Password"
+                type="password"
+                onChange={e => setConfPasswordForm( e.target.value )}
+                error={!confPassValid}
+                helperText={!confPassValid ? "Your passwords must match." : ""}
+              />
+            </Grid>
+            <Grid item>
+              <Button
+                type="button"
+                variant="contained"
+                onClick={handleChanges}
+              >
+                Sign Up
+              </Button>
+            </Grid>
+          </Grid>
         </Box>
-        <Box sx={{mt: "2vh"}}>
-          <Collapse in={this.state.alert}>
-            <Alert severity={this.state.alertType}
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    this.setState({ alert: false });
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-              sx={{ mb: 2 }}
-            >
-              {this.state.alertText}
-            </Alert>
-          </Collapse>
-        </Box>
-      </Container>
-    );
-  }
+      </Box>
+      <Box sx={{ mt: "2vh" }}>
+        <Collapse in={alert}>
+          <Alert severity={alertType || "warning"}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setAlert(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            {alertText}
+          </Alert>
+        </Collapse>
+      </Box>
+    </Container>
+  );
+
 }
 
 export default Signin;
