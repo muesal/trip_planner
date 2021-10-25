@@ -27,6 +27,17 @@ def connect():
     return con
 
 
+# set up  the database
+connection = connect()
+cursor = connection.cursor()
+cursor.execute(open("trip.sql", "r").read())
+cursor.execute(open("functions.sql", "r").read())
+cursor.execute(open("insert_data.sql", "r").read())
+connection.commit()
+cursor.close()
+connection.close()
+
+
 @app.route('/')
 def home():
     return ''
