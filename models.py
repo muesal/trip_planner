@@ -8,8 +8,8 @@ class User(db.Model):
 
     usrid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True)
-    email = db.Column(db.String(50), index=True, unique=True)
-    hashed_password = db.Column(db.String(50), index=True, unique=True)
+    email = db.Column(db.String(1000), index=True, unique=True)
+    hashed_password = db.Column(db.Text, unique=True)
     roles = db.Column(db.Text, default=True, server_default="operator")
     is_active = db.Column(db.Boolean, default=True, server_default="true")
 

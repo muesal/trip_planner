@@ -2,20 +2,20 @@
 
 DROP TABLE IF EXISTS
     message, chat, topic, field, item, section,
-    form, participates, trip, kindField, kind, friend, usr
+    form, participates, trip, kindField, kind, friend
     CASCADE;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Create all tables
 ------------------------------------------------------------------------------------------------------------------------
-CREATE TABLE usr (
-    usrID           SERIAL PRIMARY KEY,
-    name            VARCHAR(50) UNIQUE,
-    email           VARCHAR(50) UNIQUE,
-    hashed_password Text,
-    is_active       Boolean,
-    roles           VARCHAR(50)
-);
+-- CREATE CREATE TABLE IF NOT EXISTS usr (
+--    usrID           SERIAL PRIMARY KEY,
+--    name            VARCHAR(50) UNIQUE,
+--    email           VARCHAR(50) UNIQUE,
+--    hashed_password Text,
+--    is_active       Boolean,
+--    roles           VARCHAR(50)
+--);
 
 CREATE TABLE friend (
     usrID1 INTEGER REFERENCES usr (usrID) ON DELETE CASCADE,

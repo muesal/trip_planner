@@ -22,6 +22,7 @@ app.config["JWT_SECRET_KEY"] = 'qAWQ3W4E5Ra3w4erdfrt67zughu8z7t6frdesw34e5r6tzug
 app.config["JWT_TOKEN_LOCATION"] ="cookies"
 app.config['JWT_COOKIE_SECURE'] = False
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] =\
     "postgresql://" + DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@localhost:5432/" + DATABASE
 
@@ -42,19 +43,19 @@ def connect():
     return con
 
 
+# set up  the database
 with app.app_context():
     db.create_all()
-     # TODO: put stuff from below here, execute if no useres in db
     db.session.commit()
-# set up  the database
-connection = connect()
-cursor = connection.cursor()
-cursor.execute(open("trip.sql", "r").read())
-cursor.execute(open("functions.sql", "r").read())
-cursor.execute(open("insert_data.sql", "r").read())
-connection.commit()
-cursor.close()
-connection.close()
+    if db.session.query(User.usrid).count() < 1:
+        connection = connect()
+        cursor = connection.cursor()
+        cursor.execute(open("trip.sql", "r").read())
+        cursor.execute(open("functions.sql", "r").read())
+        cursor.execute(open("insert_data.sql", "r").read())
+        connection.commit()
+        cursor.close()
+        connection.close()
 
 
 @app.after_request
