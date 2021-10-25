@@ -9,10 +9,12 @@ DROP TABLE IF EXISTS
 -- Create all tables
 ------------------------------------------------------------------------------------------------------------------------
 CREATE TABLE usr (
-    usrID    SERIAL PRIMARY KEY,
-    name     VARCHAR(50) UNIQUE,
-    email    VARCHAR(50) UNIQUE,
-    password VARCHAR(50)
+    usrID           SERIAL PRIMARY KEY,
+    name            VARCHAR(50) UNIQUE,
+    email           VARCHAR(50) UNIQUE,
+    hashed_password Text,
+    is_active       Boolean,
+    roles           VARCHAR(50)
 );
 
 CREATE TABLE friend (

@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import Box from '@mui/material/Box';
 import { Button, Container, Grid, TextField, Typography } from "@mui/material";
 import axios from 'axios';
-import { Link } from "react-router-dom";
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -24,16 +23,13 @@ function Account(props) {
   });
 
   const getData = () => {
-    var id =props.usrID;
-    var usrdata = {
-      id
-    };
-
     axios({
       method: "get",
       url: "http://127.0.0.1:5000/account",
       credentials: 'include',
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json",
+      'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+      },
     })
       .then((res) => {
         setUsr(res.data)
@@ -70,8 +66,12 @@ function Account(props) {
       method: "put",
       url: "http://localhost:5000/account",
       credentials: 'include',
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': `Bearer ${localStorage.getItem('REACT_TOKEN_AUTH_KEY')}`
+      },
       data: JSON.stringify({'data': credentials}),
+      withCredentials: 'True'
     })
       .then((response) => {
         if (response.data.error) {
