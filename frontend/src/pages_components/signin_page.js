@@ -7,6 +7,7 @@ import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { Redirect } from "react-router";
+import { login } from "../auth/index";
 
 
 function Signin(props) {
@@ -75,23 +76,24 @@ function Signin(props) {
       url: "http://localhost:5000/signin",
       credentials: 'include',
       headers: { "Content-Type": "application/json" },
-      data: JSON.stringify({'data': credentials})
+      data: JSON.stringify({ 'data': credentials })
     })
       .then((response) => {
         if (response.data.error) {
           setAlertText(response.data.error);
           setAlert(true);
           setAlertType("error");
-        }
-        if (response.data.msg) {
-          setAlertText(response.data.msg);
+        } else {
+          setAlertText("Signin successfull, redirecting you to your account");
           setAlert(true);
           setAlertType("success");
-          props.loggedHandler(true, response.data.usrID);
-          setRedirect(true)
+
+          login(response.data.access_token);
+
+          props.loggedHandler(true, response.data.access_token);
           setTimeout(() => {
             setRedirect(true);
-          }, 2000);
+          }, 1000);
         }
       })
       .catch((err) => {
@@ -132,7 +134,7 @@ function Signin(props) {
               <TextField
                 variant="outlined"
                 label="Username"
-                onChange={e => setUsernameForm( e.target.value )}
+                onChange={e => setUsernameForm(e.target.value)}
                 error={!usernameValid}
                 helperText={!usernameValid ? "The username is too short!" : ""}
               />
@@ -141,7 +143,7 @@ function Signin(props) {
               <TextField
                 variant="outlined"
                 label="Email"
-                onChange={e => setEmailForm( e.target.value )}
+                onChange={e => setEmailForm(e.target.value)}
                 error={!emailValid}
                 helperText={!emailValid ? "You must use a valid email." : ""}
               />
@@ -151,7 +153,7 @@ function Signin(props) {
                 variant="outlined"
                 label="Password"
                 type="password"
-                onChange={e => setPasswordForm( e.target.value )}
+                onChange={e => setPasswordForm(e.target.value)}
                 error={!passValid}
                 helperText={!passValid ? "Your password is too weak." : ""}
               />
@@ -161,7 +163,7 @@ function Signin(props) {
                 variant="outlined"
                 label="Confirm Password"
                 type="password"
-                onChange={e => setConfPasswordForm( e.target.value )}
+                onChange={e => setConfPasswordForm(e.target.value)}
                 error={!confPassValid}
                 helperText={!confPassValid ? "Your passwords must match." : ""}
               />

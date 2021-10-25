@@ -74,6 +74,7 @@ def home():
 def login():
     data = request.json['data']
     user = guard.authenticate(data['email'], data['password'])
+    print(user)
     return {'access_token': guard.encode_jwt_token(user)}, 200
 
 
@@ -106,17 +107,15 @@ def signin():
     if users:
         response = {'error': "The email already exist."}
     else:
-        cur.execute("INSERT INTO usr (name, email, password) VALUES (%s, %s, %s) RETURNING usrID;",
-                    (f"{data['username']}", f"{data['email']}", f"{data['password']}"))
+        cur.execute("INSERT INTO usr (name, email, hashed_password, is_active, roles) VALUES (%s, %s, %s, %s, %s) RETURNING usrID;",
+                    (f"{data['username']}", f"{data['email']}", f"{guard.hash_password(data['password'])}", "true", "user"))
         con.commit()
-        user_id = cur.fetchone()
-        if user_id:
-            response = {'msg': "You signin succesfully. Redirecting to your account page.", 'usrID': user_id}
-        else:
-            response = {'msg': "You could not be signed in (Serer Error)"}
     cur.close()
     con.close()
-    return jsonify(response)
+
+    user = guard.authenticate(data['email'], data['password'])
+    print(user)
+    return {'access_token': guard.encode_jwt_token(user)}, 200
 
 
 # Create a new trip.

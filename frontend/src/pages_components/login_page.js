@@ -9,7 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { Redirect } from "react-router";
 import { useState } from 'react';
-import {login} from "../auth/index"
+import {login} from "../auth/index";
 
 function Login(props) {
 
@@ -52,7 +52,7 @@ function Login(props) {
           setAlert(true);
           setAlertType("success");
 
-          login(response.data.access_token)
+          login(response.data.access_token);
 
           props.loggedHandler(true, response.data.access_token);
           setTimeout(() => {
