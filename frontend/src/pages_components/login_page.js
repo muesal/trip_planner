@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { Redirect } from "react-router";
 import { useState } from 'react';
+import {login} from "../auth/index"
 
 function Login(props) {
 
@@ -51,9 +52,9 @@ function Login(props) {
           setAlert(true);
           setAlertType("success");
 
-          localStorage.setItem('currentUser', JSON.stringify(response.data.usrID));
+          login(response.data.access_token)
 
-          props.loggedHandler(true, response.data.usrID);
+          props.loggedHandler(true, response.data.access_token);
           setTimeout(() => {
             setRedirect(true);
           }, 1000);

@@ -13,9 +13,9 @@ INSERT INTO topic (topicID, name) VALUES (1, 'General'), (2, 'Transport'), (3, '
 
 -- create two users, which are friends, user1 creates a hiking trip.
 CREATE OR REPLACE FUNCTION insert_data () returns void AS $$
-    INSERT INTO usr (name, email, password) VALUES
-        ('user1', 'user1@testmail.com', '123456789'),
-        ('user2', 'user2@testmail.com', '987654321');
+    INSERT INTO usr (name, email, hashed_password, is_active, roles) VALUES
+        ('user1', 'user1@testmail.com','$pbkdf2-sha512$25000$ZgyhNMa4954zZux9D8E4Zw$ywCND/2UvzHhoz6n7loNDyrpBZ5f0Sy9T3S2mkZ6g3bIvK5oCFPOCKCmSREGYV4gxUGCghYWIPotE2H6CJIHNg', true, 'admin'),
+        ('user2', 'user2@testmail.com', '$pbkdf2-sha512$25000$8x4DAODcW2sN4ZxTSqnV.g$XHassHx1j9XdfQESdx03dAOOwHnlIusM5wWfVThnto6BY69P26MQUl59Er139fA.QdF0bXXzGRCKQkoFG3tQdg', true, 'admin');
 
     INSERT INTO friend (usrID1, usrID2) VALUES (1, 2);
 

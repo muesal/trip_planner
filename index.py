@@ -1,30 +1,40 @@
-from flask import Flask, jsonify, request, redirect, url_for, session
+from flask import Flask, jsonify, request, redirect, url_for
+import flask_praetorian
 from flask_cors import CORS
-from flask_session import Session
+from flask_jwt_extended import get_jwt_identity, jwt_required, JWTManager, set_access_cookies
 from dotenv import load_dotenv
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, set_access_cookies
 import psycopg2
 import os
+
+from models import db, User
 
 load_dotenv()
 
 # get info about the Database from .env
 DATABASE = os.getenv('DATABASE')
-DATABASE_USERNAME = os.getenv('DATABSE_USERNAME')
+DATABASE_USERNAME = os.getenv('DATABASE_USERNAME')
 DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'qasdtfzghjbvcftdr567z8uijnhbvgfcdres45r6t7z8u9i0o'
-app.config['SESSION_TYPE'] = 'filesystem'
 app.config["JWT_SECRET_KEY"] = 'qAWQ3W4E5Ra3w4erdfrt67zughu8z7t6frdesw34e5r6tzughji'
 app.config["JWT_TOKEN_LOCATION"] ="cookies"
 app.config['JWT_COOKIE_SECURE'] = False
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
-SESSION_TYPE = 'filesystem'
+app.config['SQLALCHEMY_DATABASE_URI'] =\
+    "postgresql://" + DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@localhost:5432/" + DATABASE
 
-jwt = JWTManager(app)
-Session(app)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, support_credentials=True)
+jwt = JWTManager(app)
+guard = flask_praetorian.Praetorian()
+guard.init_app(app, User)
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
+    db.session.commit()
 
 
 # Get the connection to the database
@@ -37,13 +47,6 @@ def connect():
     return con
 
 
-@app.after_request
-def middleware_for_response(response):
-    # Allowing the credentials in the response.
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
-
-
 @app.route('/')
 def home():
     return ''
@@ -52,22 +55,16 @@ def home():
 # Login
 @app.route('/login', methods=['POST'])
 def login():
-    con = connect()
-    cur = con.cursor()
     data = request.json['data']
-    cur.execute("SELECT usrID, password FROM usr WHERE email = %s;", [f"{data['email']}"])
-    user = cur.fetchone()
+    user = guard.authenticate(data['email'], data['password'])
+    return {'access_token': guard.encode_jwt_token(user)}, 200
 
-    cur.close()
-    con.close()
-    if not user or data['password'] != user[1]:
-        return jsonify(error="Email or password incorrect"), 500
 
-    # Set the user id in any way, maybe use flask-login
-    session["user_id"] = user[0]
-
-    access_token = create_access_token(identity=user[0])
-    return jsonify(access_token=access_token)
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    old_token = request.get_data()
+    new_token = guard.refresh_jwt_token(old_token)
+    return {'access_token': new_token}, 200
 
 
 # Logout
@@ -657,11 +654,12 @@ def get_forms(trip_id):
 
 # GET / Update / Delete the account of the user
 @app.route('/account', methods=['GET', 'PUT', 'DELETE'])
+@flask_praetorian.auth_required # This does not work, as the token is invalid
 def account():
     con = connect()
     cur = con.cursor()
 
-    user_id = 1  # TODO: userID
+    user_id = get_jwt_identity()  # TODO: userID
 
     # If the trip does not exist or the user is not participating return error
     cur.execute("SELECT name, email, password FROM usr WHERE usrID = %s;", [user_id])
