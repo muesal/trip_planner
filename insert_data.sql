@@ -7,7 +7,8 @@ INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food');
 
 INSERT INTO kindField (kindID, name, sectionID) VALUES
     (1, 'tent', 1), (1, 'sleeping bag',1), (1, 'matches',1),
-    (2, 'helmet',1), (2, 'magnesium',1), (2, 'harness',1), (2, 'rope',1);
+    (2, 'helmet',1), (2, 'magnesium',1), (2, 'harness',1), (2, 'rope',1),
+    (3, 'snorkel',1), (3, 'bathing-suit',1), (3, 'rivers',1), (3, 'suncream',1);
 
 INSERT INTO topic (topicID, name) VALUES (1, 'General'), (2, 'Transport'), (3, 'Food');
 
