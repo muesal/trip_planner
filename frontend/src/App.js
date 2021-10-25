@@ -79,7 +79,7 @@ function App() {
             </div>
 
             <div className="menuButton">
-              <Button component={Link} to="/checklists" variant="contained" color="primary">
+              <Button component={Link} to="/checklist" variant="contained" color="primary">
                 Checklist
               </Button>
             </div>

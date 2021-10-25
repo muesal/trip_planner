@@ -27,8 +27,9 @@ function Account(props) {
       method: "get",
       url: "http://127.0.0.1:5000/account",
       credentials: 'include',
-      headers: {"Content-Type": "application/json",
-      'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
       },
     })
       .then((res) => {
