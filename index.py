@@ -359,15 +359,15 @@ def checklist(trip_id):
             return jsonify(error="This item could not be found"), 500  # TODO: error code?
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = item[1]
-        if data['quantity'] is None:
+        if 'quantity' not in data or data['quantity'] is None:
             data['quantity'] = item[2]
         else:
             data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
-        if data['packed'] is None:
+        if 'packed' not in data or  data['packed'] is None:
             data['packed'] = item[2]
-        if data['section'] is None:
+        if 'section' not in data or data['section'] is None:
             data['section'] = item[3]
         else:
             cur.execute("SELECT sectionID FROM section WHERE name = %s;", [data['section']])
@@ -393,13 +393,13 @@ def checklist(trip_id):
         data = request.json['data']
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = 'New Item'
-        if data['quantity'] is None:
+        if 'quantity' not in data or data['quantity'] is None:
             data['quantity'] = 1
         else:
             data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
-        if data['section'] is None:
+        if 'section' not in data or data['section'] is None:
             data['section'] = 1
         else:
             cur.execute("SELECT sectionID FROM section WHERE name = %s;", [data['section']])
@@ -537,11 +537,11 @@ def get_trip(trip_id):
             return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = trip[1]
-        if data['start'] is None:
+        if 'start' not in data or data['start'] is None:
             data['start'] = trip[2]
-        if data['location'] is None:
+        if 'location' not in data or data['location'] is None:
             data['location'] = trip[5]
 
         cur.execute("UPDATE trip SET (name, start_date, location, content) = (%s, TO_DATE(%s, 'YYYY/MM/DD'), "
@@ -556,7 +556,7 @@ def get_trip(trip_id):
             return jsonify(error="Updated data could not be saved"), 500
 
         # If the duration changes, the fields of the trip must be adapted
-        if data['duration'] is not None:
+        if 'duration' not in data or data['duration'] is not None:
             data['duration'] = int(float(data['duration']))  # assure that the value is an integer
             duration = int(trip[1])
             if duration != data['duration']:
