@@ -90,7 +90,7 @@ def refresh():
 def logout():
     # Unset the user id
     # session.pop('user_id')
-    return redirect('http://localhost:3000/home', code=200)
+    return redirect(url_for('home'), code=200)
 
 
 # Signin
@@ -162,7 +162,7 @@ def add_trip():
 
     cur.close()
     con.close()
-    return redirect('http://localhost:3000/trip/' + str(created_trip), code=200)
+    return redirect(url_for('trip', trip_id=created_trip), code=200)
 
 
 # Return 5 soonest trips this user participates in
@@ -454,7 +454,7 @@ def checklist(trip_id):
         if it is None:
             return jsonify(error="Item could not be deleted"), 500  # TODO: error code?
 
-        return redirect('http://localhost:3000/checklist/' + str(trip_id), code=200)
+        return redirect(url_for('checklist', trip_id=trip_id), code=200)
 
     cur.close()
     con.close()
@@ -618,7 +618,7 @@ def get_trip(trip_id):
         if trip is None:
             return jsonify(error="Trip could not be deleted"), 500
 
-        return redirect('http://localhost:3000/trips/', code=200)
+        return redirect(url_for('trips'), code=200)
 
     cur.close()
     con.close()
@@ -820,7 +820,7 @@ def account():
         if u is None:
             return jsonify(error="User could not be deleted"), 500  # TODO: error code?
 
-        return redirect('http://localhost:3000/', code=200)
+        return redirect(url_for('home'), code=200)
 
     cur.close()
     con.close()
