@@ -22,6 +22,7 @@ app.config["JWT_SECRET_KEY"] = 'qAWQ3W4E5Ra3w4erdfrt67zughu8z7t6frdesw34e5r6tzug
 app.config["JWT_TOKEN_LOCATION"] ="cookies"
 app.config['JWT_COOKIE_SECURE'] = False
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] =\
     "postgresql://" + DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@localhost:5432/" + DATABASE
 
@@ -42,19 +43,19 @@ def connect():
     return con
 
 
+# set up  the database
 with app.app_context():
     db.create_all()
-     # TODO: put stuff from below here, execute if no useres in db
     db.session.commit()
-# set up  the database
-connection = connect()
-cursor = connection.cursor()
-cursor.execute(open("trip.sql", "r").read())
-cursor.execute(open("functions.sql", "r").read())
-cursor.execute(open("insert_data.sql", "r").read())
-connection.commit()
-cursor.close()
-connection.close()
+    if db.session.query(User.usrid).count() < 1:
+        connection = connect()
+        cursor = connection.cursor()
+        cursor.execute(open("trip.sql", "r").read())
+        cursor.execute(open("functions.sql", "r").read())
+        cursor.execute(open("insert_data.sql", "r").read())
+        connection.commit()
+        cursor.close()
+        connection.close()
 
 
 @app.after_request
@@ -90,7 +91,7 @@ def refresh():
 def logout():
     # Unset the user id
     # session.pop('user_id')
-    return redirect('http://localhost:3000/home', code=200)
+    return redirect(url_for('home'), code=200)
 
 
 # Signin
@@ -160,7 +161,7 @@ def add_trip():
 
     cur.close()
     con.close()
-    return redirect('http://localhost:3000/trip/' + str(created_trip), code=200)
+    return redirect(url_for('trip', trip_id=created_trip), code=200)
 
 
 # Return 5 soonest trips this user participates in
@@ -357,15 +358,15 @@ def checklist(trip_id):
             return jsonify(error="This item could not be found"), 500  # TODO: error code?
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = item[1]
-        if data['quantity'] is None:
+        if 'quantity' not in data or data['quantity'] is None:
             data['quantity'] = item[2]
         else:
             data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
-        if data['packed'] is None:
+        if 'packed' not in data or  data['packed'] is None:
             data['packed'] = item[2]
-        if data['section'] is None:
+        if 'section' not in data or data['section'] is None:
             data['section'] = item[3]
         else:
             cur.execute("SELECT sectionID FROM section WHERE name = %s;", [data['section']])
@@ -391,13 +392,13 @@ def checklist(trip_id):
         data = request.json['data']
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = 'New Item'
-        if data['quantity'] is None:
+        if 'quantity' not in data or data['quantity'] is None:
             data['quantity'] = 1
         else:
             data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
-        if data['section'] is None:
+        if 'section' not in data or data['section'] is None:
             data['section'] = 1
         else:
             cur.execute("SELECT sectionID FROM section WHERE name = %s;", [data['section']])
@@ -452,7 +453,7 @@ def checklist(trip_id):
         if it is None:
             return jsonify(error="Item could not be deleted"), 500  # TODO: error code?
 
-        return redirect('http://localhost:3000/checklist/' + str(trip_id), code=200)
+        return redirect(url_for('checklist', trip_id=trip_id), code=200)
 
     cur.close()
     con.close()
@@ -535,11 +536,11 @@ def get_trip(trip_id):
             return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
         # check that all fields are correct / filled
-        if data['name'] is None:
+        if 'name' not in data or data['name'] is None:
             data['name'] = trip[1]
-        if data['start'] is None:
+        if 'start' not in data or data['start'] is None:
             data['start'] = trip[2]
-        if data['location'] is None:
+        if 'location' not in data or data['location'] is None:
             data['location'] = trip[5]
 
         cur.execute("UPDATE trip SET (name, start_date, location, content) = (%s, TO_DATE(%s, 'YYYY/MM/DD'), "
@@ -554,7 +555,7 @@ def get_trip(trip_id):
             return jsonify(error="Updated data could not be saved"), 500
 
         # If the duration changes, the fields of the trip must be adapted
-        if data['duration'] is not None:
+        if 'duration' not in data or data['duration'] is not None:
             data['duration'] = int(float(data['duration']))  # assure that the value is an integer
             duration = int(trip[1])
             if duration != data['duration']:
@@ -616,7 +617,7 @@ def get_trip(trip_id):
         if trip is None:
             return jsonify(error="Trip could not be deleted"), 500
 
-        return redirect('http://localhost:3000/trips/', code=200)
+        return redirect(url_for('trips'), code=200)
 
     cur.close()
     con.close()
@@ -818,7 +819,7 @@ def account():
         if u is None:
             return jsonify(error="User could not be deleted"), 500  # TODO: error code?
 
-        return redirect('http://localhost:3000/', code=200)
+        return redirect(url_for('home'), code=200)
 
     cur.close()
     con.close()
