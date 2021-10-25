@@ -11,6 +11,7 @@ import { materialRenderers, materialCells, } from '@jsonforms/material-renderers
 import { retrieveKinds } from './new_trip_schema'
 import { retrieveSections, schema as fieldSchema, uiSchema as fieldUiSchema } from './new_field_schema';
 import { retrieveUsers } from './ressources_schema'
+import { useHistory } from "react-router-dom";
 import EditTripDialog from "./edit_trip_dialog"
 
 import axios from "axios";
@@ -29,6 +30,8 @@ function Trip(props) {
     const [addingField, setAddingField] = useState(false)
     const [fieldData, setFieldData] = useState({})
     const [users, setUsers] = useState([])
+    const [formsCompletion, setFormsCompletion] = useState()
+    const history = useHistory();
 
     useEffect(() => {
         getUsers()
@@ -45,6 +48,7 @@ function Trip(props) {
 
     useEffect(() => {
         if(fields) {
+
             if(selectedForm === "")
                 setSelectedForm(Object.keys(fields[selectedDay])[0])
 
@@ -54,6 +58,11 @@ function Trip(props) {
                 changeSchemas(fields[selectedDay][selectedForm])
         }
     }, [fields]) 
+
+    useEffect(() => {
+        if(days.length > 0 && fields)
+            computeFormsCompletion()
+    }, [days, fields]) 
 
     useEffect(() => {
         setAddingField(false)
@@ -197,6 +206,7 @@ function Trip(props) {
         }
         setDays(days_array)
     }
+
     const getUsers = async () =>  {
         axios({
             method: "get",
@@ -270,17 +280,74 @@ function Trip(props) {
                     console.log(err);
                 });    
     }
+
+    const computeFormsCompletion = () => {
+
+
+        let formsCompletion_tmp = Array(days.length)
+
+        for(let day in days) {
+            formsCompletion_tmp[day] = {}
+
+            for(let form of Object.keys(fields[day])) {
+                let formCompleted = true;
+                for(let field of fields[day][form]) {
+                    if(field.fieldName && !field.fieldUsrID) {
+                        formCompleted = false
+                        break
+                    }
+                }  
+                formsCompletion_tmp[day][form] = formCompleted
+            }
+        }
+
+        setFormsCompletion(formsCompletion_tmp)
+
+    }
+
+    const isDayCompleted = (day) => {
+        for(let form of Object.keys(formsCompletion[day])) {
+            if(formsCompletion[day][form] === false)
+                return false
+        }
+
+        return true
+    }
  
+    const finishTrip = () => {
+        if (window.confirm("Confirm end of trip")) {
+            let data = {finished: true}
+            axios({
+                method: "put",
+                url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
+                data: {data},  // TODO: add userID
+                headers: { "Content-Type": "application/json" },
+            })
+                .then((res) => {
+                    history.push("/trips");
+                    
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+
+        }
+    }
+
     return (
 
             <main>
        
                 <div className="editTripButton">
-                    <Button onClick={handleOpen} variant="contained" color="inherit" >Edit Trip</Button>
+                    <Button onClick={handleOpen} variant="contained" color="primary" >Edit Trip</Button>
 
                     {tripEditDialogOpen && 
                         <EditTripDialog handleClose={handleClose} trip={trip} getTrip={getTrip} getFields={getFields} />}
                 </div>
+
+                <div className="finishTripButton">
+                    <Button onClick={finishTrip} variant="contained" color="inherit" >Finish Trip</Button>
+                </div> 
 
                 <div className="tripDetails">
 
@@ -311,7 +378,9 @@ function Trip(props) {
                         {days.map((day, index) => {
                             return (
                                 <div className="day" key={index}>
-                                    <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="inherit" >{day}</Button>
+                                    {formsCompletion && isDayCompleted(index) ? 
+                                    <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="inherit" >{day}</Button> : 
+                                    <Button onClick={() => {setSelectedDay(index)}} variant="contained" color="secondary" >{day}</Button> }
                                 </div>          
                             );
                         })}
@@ -362,7 +431,9 @@ function Trip(props) {
                             Object.keys(fields[selectedDay]).map((form, index) => {
                             return (
                                 <div className="formButton" key={index}>
-                                    <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button>
+                                    {formsCompletion && formsCompletion[selectedDay][form] ? 
+                                        <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="inherit" >{fields[selectedDay][form][0].formName}</Button> : 
+                                        <Button onClick={() => {setSelectedForm(form)}} variant="contained" color="secondary" >{fields[selectedDay][form][0].formName}</Button>}
                                 </div>          
                             );
                         })}

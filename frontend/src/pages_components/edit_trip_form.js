@@ -4,6 +4,7 @@ import React, {  useState, useEffect } from 'react';
 import { schema, uiSchema } from './new_trip_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { JsonForms } from '@jsonforms/react';
+import { useHistory } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
 
@@ -11,6 +12,7 @@ import moment from "moment";
 function EditTripForm(props) {
 
     const [data, setData] = useState();
+    const history = useHistory();
 
     const cancelEdit = () => {
         props.handleClose();
@@ -47,6 +49,8 @@ function EditTripForm(props) {
 
 
     const deleteTrip = () => {
+      if (window.confirm("Confirm deletion")) {
+
         axios({
                 method: "delete",
                 url: "http://127.0.0.1:5000/trip/" + props.trip.id,
@@ -60,10 +64,15 @@ function EditTripForm(props) {
                 .then((res) => {
                     console.log(res);
                 })
-                .catch((err) => {
-                    console.log(err);
-                });
-        props.handleClose();
+                    .then((res) => {
+                        console.log(res);
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            props.handleClose();
+            history.push("/trips");
+        }
     }
 
     useEffect(() => {

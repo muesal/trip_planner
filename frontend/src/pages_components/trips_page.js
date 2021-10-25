@@ -61,6 +61,7 @@ function Main(props) {
           {trips.map((row) => {
             return (
               <div className="tripCard" key={row.id}>
+             
                 <Card sx={{ border: 1, display: 'flex', backgroundColor: 'rgb(156, 156, 247)' }}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                     <CardContent sx={{ flex: '1 0 auto' }}>
@@ -99,7 +100,7 @@ function Main(props) {
 
         </Grid>
         <Grid item alignContent="flex-start">
-          <Box className="newTripButton" sx={{mt: 1}}>
+          <Box className="newTripButton" sx={{mt: 3}}>
             <Button onClick={handleOpen} variant="contained" color="inherit" >Create Trip</Button>
 
             {newTripDialogOpen &&

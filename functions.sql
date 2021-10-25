@@ -23,7 +23,7 @@ BEGIN
     PERFORM set_kind(kind, trip);
 
     -- create forms for every day
-    PERFORM increase_duration (duration, 1, trip);
+    PERFORM increase_duration (duration, 0, trip);
 
     -- create chats
     FOR t IN SELECT topicID, name FROM  topic ORDER BY topicID
