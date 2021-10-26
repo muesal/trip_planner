@@ -16,14 +16,14 @@ function Signin(props) {
   const [emailForm, setEmailForm] = useState("");
   const [passwordForm, setPasswordForm] = useState("");
   const [confPasswordForm, setConfPasswordForm] = useState("");
-  const [usernameValid, setUsernameValid] = useState(true);
-  const [emailValid, setEmailValid] = useState(true);
-  const [passValid, setPasswordValid] = useState(true);
-  const [confPassValid, setConfPasswordValid] = useState(true);
   const [alert, setAlert] = useState(false);
   const [alertText, setAlertText] = useState("");
   const [alertType, setAlertType] = useState("");
   const [redirect, setRedirect] = useState(false);
+  const [usernameError, setUsernameError] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [passError, setPasswordError] = useState(false);
+  const [confPassError, setConfPasswordError] = useState(false);
 
 
 
@@ -36,41 +36,56 @@ function Signin(props) {
     return passw.test(registerPasswd);
   }
 
-  const handleChanges = async (e) => {
-    e.preventDefault();
+  const validateRegister = async () => {
+
+    var valid = true;
+
     if (usernameForm.length < 8) {
-      setUsernameValid(false);
+      setUsernameError(true);
+      valid = false;
     }
     else {
-      setUsernameValid(true);
+      setUsernameError(false);
     }
-    setEmailValid(await checkEmail(emailForm));
-    setPasswordValid(await checkPassword(passwordForm));
-    if (!passValid || (confPasswordForm !== passwordForm)) {
-      setConfPasswordValid(false);
+    var emailvalid = await checkEmail(emailForm);
+    if (emailvalid !== true) {
+      valid = false;
+    }
+
+    setEmailError(!emailvalid);
+    var passvalid = await checkPassword(passwordForm);
+    if (passvalid !== true) {
+      valid = false;
+    }
+    setPasswordError(!passvalid);
+    if (!await checkPassword(confPasswordForm) || (confPasswordForm !== passwordForm)) {
+      setConfPasswordError(true);
+      valid = false;
     }
     else {
-      setConfPasswordValid(true);
+      setConfPasswordError(false);
     }
-    if (usernameValid && emailValid && passValid && confPassValid) {
-      handleRegister();
-    }
+    return valid;
   }
 
-  const handleRegister = async () => {
-    var username = usernameForm;
-    var email = emailForm;
-    var password = passwordForm;
-    var userData = {
-      username,
-      email,
-      password
-    };
-    registerUser(userData);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    var valid = await validateRegister();
+    if (valid) {
+      var username = usernameForm;
+      var email = emailForm;
+      var password = passwordForm;
+      var userData = {
+        username,
+        email,
+        password
+      };
+      registerUser(userData);
+    }
   }
 
   const registerUser = async (credentials) => {
-
     axios({
       method: "post",
       url: "http://localhost:5000/signin",
@@ -83,7 +98,8 @@ function Signin(props) {
           setAlertText(response.data.error);
           setAlert(true);
           setAlertType("error");
-        } else {
+        }
+        else {
           setAlertText("Signin successfull, redirecting you to your account");
           setAlert(true);
           setAlertType("success");
@@ -135,8 +151,8 @@ function Signin(props) {
                 variant="outlined"
                 label="Username"
                 onChange={e => setUsernameForm(e.target.value)}
-                error={!usernameValid}
-                helperText={!usernameValid ? "The username is too short!" : ""}
+                error={usernameError}
+                helperText={usernameError ? "The username is too short!" : ""}
               />
             </Grid>
             <Grid item >
@@ -144,8 +160,8 @@ function Signin(props) {
                 variant="outlined"
                 label="Email"
                 onChange={e => setEmailForm(e.target.value)}
-                error={!emailValid}
-                helperText={!emailValid ? "You must use a valid email." : ""}
+                error={emailError}
+                helperText={emailError ? "You must use a valid email." : ""}
               />
             </Grid>
             <Grid item >
@@ -154,8 +170,8 @@ function Signin(props) {
                 label="Password"
                 type="password"
                 onChange={e => setPasswordForm(e.target.value)}
-                error={!passValid}
-                helperText={!passValid ? "Your password is too weak." : ""}
+                error={passError}
+                helperText={passError ? "Your password is too weak." : ""}
               />
             </Grid>
             <Grid item >
@@ -164,15 +180,15 @@ function Signin(props) {
                 label="Confirm Password"
                 type="password"
                 onChange={e => setConfPasswordForm(e.target.value)}
-                error={!confPassValid}
-                helperText={!confPassValid ? "Your passwords must match." : ""}
+                error={confPassError}
+                helperText={confPassError ? "Your passwords must match." : ""}
               />
             </Grid>
             <Grid item>
               <Button
                 type="button"
                 variant="contained"
-                onClick={handleChanges}
+                onClick={handleRegister}
               >
                 Sign Up
               </Button>

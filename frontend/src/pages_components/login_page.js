@@ -43,11 +43,7 @@ function Login(props) {
       data: JSON.stringify({'data':credentials}),
     })
       .then((response) => {
-        if (response.data.error) {
-          setAlertText(response.data.error);
-          setAlert(true);
-          setAlertType("error");
-        } else {
+        if (response.data.access_token) {
           setAlertText("Login successfull, redirecting you to your account");
           setAlert(true);
           setAlertType("success");
@@ -61,6 +57,9 @@ function Login(props) {
         }
       })
       .catch((err) => {
+        setAlertText("Email or password is incorrect.");
+        setAlert(true);
+        setAlertType("error");
         console.log(err);
       });
   }

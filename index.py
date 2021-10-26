@@ -75,7 +75,6 @@ def home():
 def login():
     data = request.json['data']
     user = guard.authenticate(data['email'], data['password'])
-    print(user)
     return {'access_token': guard.encode_jwt_token(user)}, 200
 
 
@@ -103,10 +102,20 @@ def signin():
 
     # Check if email already in database: must be unique
     cur.execute("SELECT * FROM usr WHERE email = %s;", [f"{data['email']}"])
-    users = cur.fetchall()
+    email = cur.fetchall()
+    if email:
+        cur.close()
+        con.close()
+        return jsonify({'error': "The email already exist."})
 
-    if users:
-        response = {'error': "The email already exist."}
+    cur.execute("SELECT * FROM usr WHERE name = %s;", [f"{data['username']}"])
+    name = cur.fetchall()
+    if name:
+        cur.close()
+        con.close()
+        return jsonify({'error': "The username already exist."})
+    
+
     else:
         cur.execute("INSERT INTO usr (name, email, hashed_password, is_active, roles) VALUES (%s, %s, %s, %s, %s) RETURNING usrID;",
                     (f"{data['username']}", f"{data['email']}", f"{guard.hash_password(data['password'])}", "true", "user"))
@@ -115,7 +124,6 @@ def signin():
     con.close()
 
     user = guard.authenticate(data['email'], data['password'])
-    print(user)
     return {'access_token': guard.encode_jwt_token(user)}, 200
 
 
