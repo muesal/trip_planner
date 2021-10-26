@@ -320,9 +320,12 @@ function Trip(props) {
             axios({
                 method: "put",
                 url: `http://127.0.0.1:5000/trip/${props.match.params.id}`,
+                credentials: 'include',
                 data: {data},  // TODO: add userID
-                headers: { "Content-Type": "application/json" },
-            })
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },            })
                 .then((res) => {
                     history.push("/trips");
                     
@@ -332,6 +335,26 @@ function Trip(props) {
                 });
 
         }
+    }
+
+    const inviteUser = () => {
+        let data = {email: "user2@testmail.com"} // TODO: we need a form that does that: pop up to write the users email
+        axios({
+            method: "put",
+                url: `http://127.0.0.1:5000/invite/${props.match.params.id}`,
+            data: {data},
+            credentials: 'include',
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
+        })
+            .then((res) => {
+                // TODO: flash success message? Server returns either 200 or 400
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     }
 
     return (
@@ -347,7 +370,11 @@ function Trip(props) {
 
                 <div className="finishTripButton">
                     <Button onClick={finishTrip} variant="contained" color="inherit" >Finish Trip</Button>
-                </div> 
+                </div>
+
+                <div className="inviteUerButton">
+                    <Button onClick={inviteUser} variant="contained" color="inherit" >Invite User</Button>
+                </div>
 
                 <div className="tripDetails">
 
