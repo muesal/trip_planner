@@ -505,7 +505,18 @@ def get_trip(trip_id):
     elif request.method == 'PUT':
         data = request.json['data']
 
-        # special case for finishing a trip 
+        cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s;", [trip_id])
+        trip = cur.fetchone()
+        if trip is None:
+            cur.close()
+            con.close()
+            return jsonify(error="This trip does not exist"), 500  # TODO: error code?
+        if trip[0] != user_id:
+            cur.close()
+            con.close()
+            return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
+
+        # special case for finishing a trip
         if "finished" in data: 
             cur.execute('''UPDATE trip SET finished = %s
                             WHERE tripID = %s
@@ -522,18 +533,6 @@ def get_trip(trip_id):
             cur.close()
             con.close()
             return jsonify({'id': trip[0], 'finished': trip[1]})
-
-
-        cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s;", [trip_id])
-        trip = cur.fetchone()
-        if trip is None:
-            cur.close()
-            con.close()
-            return jsonify(error="This trip does not exist"), 500  # TODO: error code?
-        if trip[0] != user_id:
-            cur.close()
-            con.close()
-            return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
         # check that all fields are correct / filled
         if 'name' not in data or data['name'] is None:
