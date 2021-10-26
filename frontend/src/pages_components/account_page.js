@@ -67,12 +67,11 @@ function Account(props) {
       method: "put",
       url: "http://localhost:5000/account",
       credentials: 'include',
+      data: JSON.stringify({'data': credentials}),
       headers: {
         "Content-Type": "application/json",
-        'Authorization': `Bearer ${localStorage.getItem('REACT_TOKEN_AUTH_KEY')}`
-      },
-      data: JSON.stringify({'data': credentials}),
-      withCredentials: 'True'
+        'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+      }
     })
       .then((response) => {
         if (response.data.error) {

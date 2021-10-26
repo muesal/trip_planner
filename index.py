@@ -113,7 +113,6 @@ def signin():
         cur.close()
         con.close()
         return jsonify({'error': "The username already exist."})
-    
 
     else:
         cur.execute(
@@ -777,30 +776,12 @@ def account():
         con.close()
         return jsonify(error="User not found"), 400
 
-    # Get all friends TODO: as sql function
-    cur.execute("SELECT usrID1, u.name "
-                "FROM friend f "
-                "JOIN usr u ON u.usrID = f.usrID1 "
-                "WHERE usrID2 = %s "
-                "UNION "
-                "SELECT usrID2, u.name "
-                "FROM friend f "
-                "JOIN usr u ON u.usrID = f.usrID2 "
-                "WHERE usrID1 = %s;",
-                (user_id, user_id))
-    f = cur.fetchall()
-
-    friends = {}
-    for friend in f:
-        friends[friend[0]] = friend[1]
-
     if request.method == 'GET':
         response = {
             'id': user_id,
             'username': user[0],
             'email': user[1],
-            'password': user[2],
-            'friends': friends
+            'password': user[2]
         }
 
     elif request.method == 'PUT':
@@ -808,16 +789,16 @@ def account():
         data = request.json['data']
 
         # check that all fields are correct / filled
-        if 'name' not in data or data['name'] is None:
-            data['name'] = user[0]
+        if 'username' not in data or data['username'] is None:
+            data['username'] = user[0]
         if 'email' not in data or data['email'] is None:
             data['email'] = user[1]
+        if 'password' not in data or data['password'] is None:
+            data['password'] = user[1]
 
-        # TODO: password, check that email is unique
-
-        cur.execute("UPDATE usr SET (name, email) = (%s, %s) WHERE usrID = %s "
-                    "RETURNING name, email;",
-                    (f"{data['name']}", f"{data['email']}", user_id))
+        cur.execute("UPDATE usr SET (name, email, hashed_password) = (%s, %s, %s) WHERE usrID = %s "
+                    "RETURNING name, email, hashed_password;",
+                    (f"{data['username']}", f"{data['email']}", f"{guard.hash_password(data['password'])}", user_id))
         con.commit()
 
         u = cur.fetchone()
@@ -826,39 +807,13 @@ def account():
             con.close()
             return jsonify(error="User could not be updated"), 500
 
-        # Compare the lists of friends, update the friends of the db
-        if 'friends' not in data or data['friends'] is None:
-            data['friends'] = {}
-        friends_old = set(friends)
-        friends_new = set(data['friends'])
-        f = []
-        for friend in friends_old - friends_new:
-            # delete those friends
-            f.append([user_id, friend, friend, user_id])
-            cur.executemany("DELETE FROM friend WHERE (usrid1 = %s AND usrID2 = %s) OR (usrid1 = %s AND usrID2 = %s)",
-                            f)
-            con.commit()
-            if cur.fetchone() is None:
-                cur.close()
-                con.close()
-                return jsonify(error="Friends could not be deleted"), 500
-
-        f = []
-        for friend in friends_new - friends_old:
-            # insert those friends
-            f.append([user_id, friend])
-            cur.executemany("INSERT INTO friend (useID1, usrID2) VALUES (%s, %s)", f)
-            con.commit()
-            if cur.fetchone() is None:
-                cur.close()
-                con.close()
-                return jsonify(error="Friends could not be added"), 500
+        user_auth = guard.authenticate(data['email'], data['password'])
 
         response = {
             'id': user_id,
             'name': u[0],
             'email': u[1],
-            'friends': friends_new
+            'access_token': guard.encode_jwt_token(user_auth)
         }
 
     else:  # DELETE
