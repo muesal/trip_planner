@@ -793,10 +793,12 @@ def account():
             data['username'] = user[0]
         if 'email' not in data or data['email'] is None:
             data['email'] = user[1]
+        if 'password' not in data or data['password'] is None:
+            data['password'] = user[1]
 
-        cur.execute("UPDATE usr SET (name, email) = (%s, %s) WHERE usrID = %s "
+        cur.execute("UPDATE usr SET (name, email, hashed_password) = (%s, %s, %s) WHERE usrID = %s "
                     "RETURNING name, email, hashed_password;",
-                    (f"{data['username']}", f"{data['email']}", user_id))
+                    (f"{data['username']}", f"{data['email']}", f"{guard.hash_password(data['password'])}", user_id))
         con.commit()
 
         u = cur.fetchone()
@@ -804,8 +806,8 @@ def account():
             cur.close()
             con.close()
             return jsonify(error="User could not be updated"), 500
-            
-        user_auth = guard.authenticate(u[1], u[2])
+
+        user_auth = guard.authenticate(data['email'], data['password'])
 
         response = {
             'id': user_id,
