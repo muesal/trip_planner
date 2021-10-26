@@ -17,20 +17,13 @@ import {materialRenderers, materialCells} from '@jsonforms/material-renderers';
 import axios from 'axios';
 import {schema, uiSchema} from './create_schema'
 
-/*function useForceUpdate() {
-    let [forceUpdateValue, setState] = useState(true);
-    console.log("yo")
-    return () => setState(!forceUpdateValue);
-  }*/
 
 function Checklist(props) {
 
-   // let forceUpdate = useForceUpdate();
 
     const [data, setData] = useState();
     const [trips, setTrips] = useState(null);
     const [items, setItems] = useState()
-    const [selectedTrip, setSelectedTrip] = useState(null)
     const [value, setValue] = useState(props.match.params.id - 1);
     const [checked, setChecked] = useState();
 
@@ -55,11 +48,9 @@ function Checklist(props) {
 
         if (data && data.name && data.section && data.quantity) {
 
-            console.log(data)
-
             axios({
                 method: "post",
-                url: `http://127.0.0.1:5000/checklist/${selectedTrip}`,
+                url: `http://127.0.0.1:5000/checklist/${props.match.params.id}`,
                 credentials: 'include',
                 data: {data},
                 headers: {
@@ -67,8 +58,12 @@ function Checklist(props) {
                     'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
                 },
             })
+                .then((res) => {
+                    setData(null)
+                    getItems()
+                })
                 .catch((err) => {
-                    console.log(err);
+                    console.log(err);                    
                 });
 
         }
@@ -87,7 +82,6 @@ function Checklist(props) {
             },
         })
             .then((res) => {
-                setSelectedTrip(res.data[0].id)
                 setTrips(res.data)
             })
             .catch((err) => {
@@ -159,9 +153,7 @@ function Checklist(props) {
                 {trips &&
                 trips.map((trip, index) => {
                     return (
-                        <Tab key={index} label={trip.name} onClick={() => {
-                            setSelectedTrip(trip.id)
-                        }} />
+                        <Tab key={index} label={trip.name} />
                     );
                 })}
             </Tabs>
@@ -189,6 +181,7 @@ function Checklist(props) {
                     );
                 })}
             </List>
+            
 
             <Box sx={{paddingLeft: "10vw", mt: 5}}>
 
