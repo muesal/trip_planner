@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Switch, Route, Link } from "react-router-dom";
 import Button from '@material-ui/core/Button';
 import Person from '@material-ui/icons/Person';
@@ -22,36 +22,13 @@ import {logout, useAuth} from './auth/index'
 
 function App() {
 
-  const [apiData, setApiData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [logged] = useAuth()
   const [usrID, setUsrID] = useState("");
   const history = useHistory();
 
-  useEffect(() => {
-    getData();
-  }, []);
-
   const loggedHandler = (loged, id) => {
     setUsrID(id);
   }
-
-  const getData = () => {
-    const API = 'http://127.0.0.1:5000/';
-
-    setLoading(true)
-    /*fetch(API)
-        .then((response) => {
-            console.log(response);
-            return response.json();
-        })
-        .then((data) => {
-            console.log(data);
-            setLoading(false);
-            setApiData(data);
-        });*/
-
-  };
 
   const goToTrip = (trip) => {
     history.push(`/trip/${trip}`);
@@ -132,8 +109,10 @@ function App() {
         <Route exact path={"/login"} render={() => <Login loggedHandler={loggedHandler} />} />
         <Route exact path={"/signin"} render={() => <Signin loggedHandler={loggedHandler} />} />
         <Route exact path={"/trips"} render={() => <Trips goToTrip={goToTrip} />} />
-        <Route exact path={"/checklist"} render={() => <ChecklistRedirect apiData={apiData} loading={loading} getData={getData}/>} />        <Route exact path={"/account"} component={Account} />
-        <Route exact path={"/checklist/:id"} render={(matchProps) => <Checklist apiData={apiData} loading={loading} getData={getData} {...matchProps}/>} />        <Route exact path={"/trip/:id"} render={(matchProps) => <Trip {...matchProps} />} />
+        <Route exact path={"/checklist"} render={() => <ChecklistRedirect />} />        
+        <Route exact path={"/account"} component={Account} />
+        <Route exact path={"/checklist/:id"} render={(matchProps) => <Checklist {...matchProps}/>} />        
+        <Route exact path={"/trip/:id"} render={(matchProps) => <Trip {...matchProps} />} />
       </Switch>
     </div>
   );

@@ -2,40 +2,54 @@
 
 import React, {useState, useEffect} from 'react';
 import {JsonForms} from '@jsonforms/react';
+import { useHistory } from "react-router-dom";
 import Button from '@material-ui/core/Button';
-import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import {DataGrid} from "@material-ui/data-grid";
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Checkbox from '@mui/material/Checkbox';
 import {Box} from '@mui/system';
-
 import {materialRenderers, materialCells} from '@jsonforms/material-renderers';
 import axios from 'axios';
 import {schema, uiSchema} from './create_schema'
 
+/*function useForceUpdate() {
+    let [forceUpdateValue, setState] = useState(true);
+    console.log("yo")
+    return () => setState(!forceUpdateValue);
+  }*/
 
 function Checklist(props) {
 
+   // let forceUpdate = useForceUpdate();
+
     const [data, setData] = useState();
     const [trips, setTrips] = useState(null);
-    const [rows, setRows] = useState(null)
-    const [items, setItems] = useState(null)
+    const [items, setItems] = useState()
     const [selectedTrip, setSelectedTrip] = useState(null)
-    const [value, setValue] = useState(0);
+    const [value, setValue] = useState(props.match.params.id - 1);
+    const [checked, setChecked] = useState();
 
-    const handleChange = (event, newValue) => {
-        setValue(newValue);
-    };
+    const [forceUpdate, setForceUpdate] = useState(false);
+    const history = useHistory();
+
 
     useEffect(() => {
         getTrips();
         getItems();
-    }, [])
+    }, [forceUpdate])
 
-    const columns = [
-        {field: "name", headerName: "Item", flex: 1},
-        {field: "quantity", headerName: "Quantity", flex: 0.5},
-    ];
+    const handleChange = (event, newValue) => {
+        setValue(newValue);
+        history.push(`/checklist/${newValue + 1}`);
+
+        let forceUpdateTmp = forceUpdate
+        setForceUpdate(!forceUpdateTmp);
+    };
 
     const handleSubmit = async () => {
 
@@ -53,9 +67,6 @@ function Checklist(props) {
                     'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
                 },
             })
-                .then((res) => {
-                    props.getData()
-                })
                 .catch((err) => {
                     console.log(err);
                 });
@@ -96,56 +107,41 @@ function Checklist(props) {
             },
         })
             .then((res) => {
-                console.log(res.data)
                 setItems(res.data);
-                console.log(items);
-                let itemData = [];
-                for (const row of res.data) {
-                    itemData.push({'id': row['itemId'], 'name': row['name'], 'quantity': row['quantity']});
-                }
-                setRows(itemData);
-                console.log(rows);
-
-                // TODO:  set row to only
+                let checked_tmp = new Array(res.data.length)
+                for(let i = 0 ; i < res.data.length ; i++) 
+                    checked_tmp[i] = res.data[i].packed
+                
+                setChecked(checked_tmp)
             })
             .catch((err) => {
-                console.log(err);
+                console.log("error", err);
             });
     }
 
-    function TabPanel(props) {
-        const {children, value, index, ...other} = props;
+    const handleToggle = (index) => () => {
+        const newChecked = [...checked];
+        newChecked[index] = !newChecked[index]
+        setChecked(newChecked);
 
-        return (
-            <div
-                role="tabpanel"
-                hidden={value !== index}
-                id={`vertical-tabpanel-${index}`}
-                aria-labelledby={`vertical-tab-${index}`}
-                {...other}
-            >
-                {value === index && (
-                    <Box sx={{paddingLeft: "22vw", mt: 5}}>
-                        {children}
-                    </Box>
-                )}
-            </div>
-        );
+        let data = {item: items[index].itemId, packed: newChecked[index]}
+
+        axios({
+            method: "put",
+            url: `http://127.0.0.1:5000/checklist/${props.match.params.id}`,
+            credentials: 'include',
+            data: {data},
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+            },
+        })
+            .then((res) => {
+            })
+            .catch((err) => {
+                console.log("error", err);
+            });
     }
-
-    TabPanel.propTypes = {
-        children: PropTypes.node,
-        index: PropTypes.number.isRequired,
-        value: PropTypes.number.isRequired,
-    };
-
-    function a11yProps(index) {
-        return {
-            id: `vertical-tab-${index}`,
-            'aria-controls': `vertical-tabpanel-${index}`,
-        };
-    }
-
 
     return (
 
@@ -159,40 +155,41 @@ function Checklist(props) {
                 onChange={handleChange}
                 sx={{borderRight: 1, borderColor: 'divider'}}
             >
-                {/*<Tab label="My list" {...a11yProps(0)} />*/}
+               
                 {trips &&
-                trips.map((row) => {
+                trips.map((trip, index) => {
                     return (
-                        <Tab label={row.name} onClick={() => {
-                            setSelectedTrip(row.id)
-                        }} {...a11yProps(row.id)} />
+                        <Tab key={index} label={trip.name} onClick={() => {
+                            setSelectedTrip(trip.id)
+                        }} />
                     );
                 })}
             </Tabs>
+            
+            <List sx={{ m: 5 , bgcolor: 'background.paper' }}>
+                {items && checked && items.map((item, index) => {
 
-            <TabPanel value={value} index={0} sx={{paddingLeft: 240}}>
-                <DataGrid
-                    rows={rows || []}
-                    columns={columns}
-                    disableColumnMenu={true}
-                    checkboxSelection={true}
-                    autoHeight
-                />
-            </TabPanel>
-            {trips &&
-            trips.map((row) => {
-                return (
-                    <TabPanel value={value} index={row.id}>
-                        <DataGrid
-                            rows={rows || []}
-                            columns={columns}
-                            disableColumnMenu={true}
-                            checkboxSelection={true}
-                            autoHeight
-                        />
-                    </TabPanel>
-                );
-            })}
+                    return (
+                        <ListItem
+                            key={index}
+                            disablePadding
+                        >
+                            <ListItemButton role={undefined} onClick={handleToggle(index)} dense>
+                                <ListItemIcon>
+                                    <Checkbox
+                                        edge="start"
+                                        checked={checked[index]}
+                                        tabIndex={-1}
+                                        disableRipple
+                                    />
+                                </ListItemIcon>
+                                <ListItemText primary={item.name + " x" + item.quantity} />
+                            </ListItemButton>
+                        </ListItem>
+                    );
+                })}
+            </List>
+
             <Box sx={{paddingLeft: "10vw", mt: 5}}>
 
                 <h2> Add Item </h2>

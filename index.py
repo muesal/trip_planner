@@ -15,15 +15,14 @@ DATABASE = os.getenv('DATABASE')
 DATABASE_USERNAME = os.getenv('DATABASE_USERNAME')
 DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
 
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'qasdtfzghjbvcftdr567z8uijnhbvgfcdres45r6t7z8u9i0o'
 app.config["JWT_SECRET_KEY"] = 'qAWQ3W4E5Ra3w4erdfrt67zughu8z7t6frdesw34e5r6tzughji'
-app.config["JWT_TOKEN_LOCATION"] ="cookies"
+app.config["JWT_TOKEN_LOCATION"] = "cookies"
 app.config['JWT_COOKIE_SECURE'] = False
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] =\
+app.config['SQLALCHEMY_DATABASE_URI'] = \
     "postgresql://" + DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@localhost:5432/" + DATABASE
 
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, support_credentials=True)
@@ -117,8 +116,9 @@ def signin():
     
 
     else:
-        cur.execute("INSERT INTO usr (name, email, hashed_password, is_active, roles) VALUES (%s, %s, %s, %s, %s) RETURNING usrID;",
-                    (f"{data['username']}", f"{data['email']}", f"{guard.hash_password(data['password'])}", "true", "user"))
+        cur.execute(
+            "INSERT INTO usr (name, email, hashed_password, is_active, roles) VALUES (%s, %s, %s, %s, %s) RETURNING usrID;",
+            (f"{data['username']}", f"{data['email']}", f"{guard.hash_password(data['password'])}", "true", "user"))
         con.commit()
     cur.close()
     con.close()
@@ -261,6 +261,55 @@ def get_users():
     return jsonify(response)
 
 
+# Returns all users
+@app.route('/invite/<trip_id>', methods=['PUT'])
+@flask_praetorian.auth_required
+def invite_friend(trip_id):
+    con = connect()
+    cur = con.cursor()
+
+    token = guard.read_token_from_header()
+    user_id = guard.extract_jwt_token(token)['id']
+
+    cur.execute("SELECT tripID FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, user_id))
+    up = cur.fetchall()
+    if up is None:
+        cur.close()
+        con.close()
+        return jsonify(error="Trip not found"), 400
+
+    data = request.json['data']
+    if 'email' not in data:
+        cur.close()
+        con.close()
+        return jsonify(error="Please give a valid email address"), 400
+
+    cur.execute("SELECT usrID FROM usr WHERE email = %s", [f"{data['email']}"])
+    u = cur.fetchone()
+    if u is None:
+        cur.close()
+        con.close()
+        return jsonify(error="Please give a valid email address"), 400
+
+    cur.execute("SELECT tripID FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, u[0]))
+    ut = cur.fetchone()
+    if ut is not None:
+        cur.close()
+        con.close()
+        return jsonify("User already invited"), 200
+
+    cur.execute("INSERT INTO participates (tripID, usrID) VALUES (%s, %s) RETURNING usrID;", (trip_id, u[0]))
+    con.commit()
+    u = cur.fetchone()
+
+    cur.close()
+    con.close()
+    if u is None:
+        return jsonify(error="User could not be invited"), 400
+
+    return jsonify("User successfully added to trip"), 200
+
+
 # Return all sections
 @app.route('/sections', methods=['GET'])
 def get_sections():
@@ -293,7 +342,7 @@ def checklist_first():
 
     token = guard.read_token_from_header()
     user_id = guard.extract_jwt_token(token)['id']
-    
+
     # Get the id of the first trip of the user
     cur.execute("SELECT t.tripID FROM trip t JOIN participates p ON p.usrID = %s AND p.tripID = t.tripID "
                 "WHERE t.finished IS NOT False "
@@ -336,7 +385,7 @@ def checklist(trip_id):
                     " FROM item i "
                     "INNER JOIN section s ON s.sectionID = i.sectionID "
                     "WHERE tripID = %s AND usrID = %s "
-                    "ORDER BY (i.packed);",  # todo: descending or ascending?
+                    "ORDER BY i.itemID;", 
                     (trip_id, user_id))
         cl = cur.fetchall()
         response = []
@@ -355,7 +404,7 @@ def checklist(trip_id):
         # Update the item (name, quantity, section or packed)
         data = request.json['data']
 
-        cur.execute("SELECT name, quantity, sectionID "
+        cur.execute("SELECT name, quantity, packed, sectionID "
                     "FROM item "
                     "WHERE itemID = %s AND usrID = %s AND tripID = %s;",
                     (f"{data['item']}", user_id, trip_id))
@@ -367,12 +416,12 @@ def checklist(trip_id):
 
         # check that all fields are correct / filled
         if 'name' not in data or data['name'] is None:
-            data['name'] = item[1]
+            data['name'] = item[0]
         if 'quantity' not in data or data['quantity'] is None:
-            data['quantity'] = item[2]
+            data['quantity'] = item[1]
         else:
             data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
-        if 'packed' not in data or  data['packed'] is None:
+        if 'packed' not in data or data['packed'] is None:
             data['packed'] = item[2]
         if 'section' not in data or data['section'] is None:
             data['section'] = item[3]
@@ -380,8 +429,8 @@ def checklist(trip_id):
             cur.execute("SELECT sectionID FROM section WHERE name = %s;", [data['section']])
             data['section'] = cur.fetchone()[0]  # TODO: this could throw an error, if the name is wrong
 
-        cur.execute("UPDATE item SET (name, quantity, packed, section) = (%s, %s, %s, %s) WHERE itemID = %s "
-                    "RETURNING name, quantity, section, packed;",
+        cur.execute("UPDATE item SET (name, quantity, packed, sectionid) = (%s, %s, %s, %s) WHERE itemID = %s "
+                    "RETURNING name, quantity, sectionid, packed;",
                     (f"{data['name']}", f"{data['quantity']}", f"{data['packed']}", f"{data['section']}",
                      f"{data['item']}"))
         con.commit()
@@ -513,12 +562,23 @@ def get_trip(trip_id):
     elif request.method == 'PUT':
         data = request.json['data']
 
-        # special case for finishing a trip 
-        if "finished" in data: 
+        cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s;", [trip_id])
+        trip = cur.fetchone()
+        if trip is None:
+            cur.close()
+            con.close()
+            return jsonify(error="This trip does not exist"), 500  # TODO: error code?
+        if trip[0] != user_id:
+            cur.close()
+            con.close()
+            return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
+
+        # special case for finishing a trip
+        if "finished" in data:
             cur.execute('''UPDATE trip SET finished = %s
                             WHERE tripID = %s
                             RETURNING tripid, finished;''',
-                        (data['finished'], trip_id)) 
+                        (data['finished'], trip_id))
             con.commit()
             trip = cur.fetchone()
 
@@ -530,18 +590,6 @@ def get_trip(trip_id):
             cur.close()
             con.close()
             return jsonify({'id': trip[0], 'finished': trip[1]})
-
-
-        cur.execute("SELECT usrID, name, start_date, duration, location FROM trip WHERE tripID = %s;", [trip_id])
-        trip = cur.fetchone()
-        if trip is None:
-            cur.close()
-            con.close()
-            return jsonify(error="This trip does not exist"), 500  # TODO: error code?
-        if trip[0] != user_id:
-            cur.close()
-            con.close()
-            return jsonify(error="Only the creator of a trip may update it"), 400  # TODO: error code?
 
         # check that all fields are correct / filled
         if 'name' not in data or data['name'] is None:
@@ -694,8 +742,8 @@ def get_forms(trip_id):
     else:  # PUT
 
         data = request.json['assignData']
-        
-        if 'userID' not in  data :
+
+        if 'userID' not in data:
             data['userID'] = None
 
         cur.execute("SELECT assign_field(%s, %s)",
