@@ -328,7 +328,7 @@ def checklist(trip_id):
                     " FROM item i "
                     "INNER JOIN section s ON s.sectionID = i.sectionID "
                     "WHERE tripID = %s AND usrID = %s "
-                    "ORDER BY (i.packed);",  # todo: descending or ascending?
+                    "ORDER BY i.itemID;", 
                     (trip_id, user_id))
         cl = cur.fetchall()
         response = []
@@ -347,7 +347,7 @@ def checklist(trip_id):
         # Update the item (name, quantity, section or packed)
         data = request.json['data']
 
-        cur.execute("SELECT name, quantity, sectionID "
+        cur.execute("SELECT name, quantity, packed, sectionID "
                     "FROM item "
                     "WHERE itemID = %s AND usrID = %s AND tripID = %s;",
                     (f"{data['item']}", user_id, trip_id))
@@ -359,9 +359,9 @@ def checklist(trip_id):
 
         # check that all fields are correct / filled
         if 'name' not in data or data['name'] is None:
-            data['name'] = item[1]
+            data['name'] = item[0]
         if 'quantity' not in data or data['quantity'] is None:
-            data['quantity'] = item[2]
+            data['quantity'] = item[1]
         else:
             data['quantity'] = int(float(data['quantity']))  # assure that the value is an integer
         if 'packed' not in data or  data['packed'] is None:
@@ -372,8 +372,8 @@ def checklist(trip_id):
             cur.execute("SELECT sectionID FROM section WHERE name = %s;", [data['section']])
             data['section'] = cur.fetchone()[0]  # TODO: this could throw an error, if the name is wrong
 
-        cur.execute("UPDATE item SET (name, quantity, packed, section) = (%s, %s, %s, %s) WHERE itemID = %s "
-                    "RETURNING name, quantity, section, packed;",
+        cur.execute("UPDATE item SET (name, quantity, packed, sectionid) = (%s, %s, %s, %s) WHERE itemID = %s "
+                    "RETURNING name, quantity, sectionid, packed;",
                     (f"{data['name']}", f"{data['quantity']}", f"{data['packed']}", f"{data['section']}",
                      f"{data['item']}"))
         con.commit()
