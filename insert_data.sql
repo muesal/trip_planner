@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------------------------------------------------------
 INSERT INTO kind (kindID, name) VALUES (1, 'other'), (2, 'hiking'), (3, 'climbing'), (4, 'scubadiving');
 
-INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food');
+INSERT INTO section (sectionID, name) VALUES (1, 'Gear'), (2, 'Food') (3, 'Other');
 
 INSERT INTO kindField (kindID, name, sectionID) VALUES
     (1, 'tent', 1), (1, 'sleeping bag',1), (1, 'matches',1),

@@ -33,6 +33,11 @@ function Checklist(props) {
 
     useEffect(() => {
         getTrips();
+    }, [])
+
+    useEffect(() => {
+        setChecked()
+        setItems()
         getItems();
     }, [forceUpdate])
 
@@ -114,6 +119,7 @@ function Checklist(props) {
     }
 
     const handleToggle = (index) => () => {
+        
         const newChecked = [...checked];
         newChecked[index] = !newChecked[index]
         setChecked(newChecked);
@@ -160,13 +166,12 @@ function Checklist(props) {
             
             <List sx={{ m: 5 , bgcolor: 'background.paper' }}>
                 {items && checked && items.map((item, index) => {
-
                     return (
                         <ListItem
                             key={index}
                             disablePadding
                         >
-                            <ListItemButton role={undefined} onClick={handleToggle(index)} dense>
+                            <ListItemButton role={undefined} onClick={handleToggle(index)} disableRipple dense>
                                 <ListItemIcon>
                                     <Checkbox
                                         edge="start"
@@ -176,6 +181,7 @@ function Checklist(props) {
                                     />
                                 </ListItemIcon>
                                 <ListItemText primary={item.name + " x" + item.quantity} />
+
                             </ListItemButton>
                         </ListItem>
                     );

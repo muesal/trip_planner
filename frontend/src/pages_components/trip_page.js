@@ -345,29 +345,29 @@ function Trip(props) {
     }
 
     const subimtUserInvitation = () => {
-        let data = {email: userEmail.email} 
-        console.log("data", data)
-        axios({
-            method: "put",
-            url: `http://127.0.0.1:5000/invite/${props.match.params.id}`,
-            data: {data},
-            credentials: 'include',
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
-            },
-        })
-            .then((res) => {
-                if (window.confirm("Invitation sent")) {
-                setUserEmail(null)
-                setInvitingUser(false)
-                
-
-                }
+        if(userEmail) {
+            let data = {email: userEmail.email} 
+            console.log("data", data)
+            axios({
+                method: "put",
+                url: `http://127.0.0.1:5000/invite/${props.match.params.id}`,
+                data: {data},
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
-            .catch((err) => {
-                console.log(err);
-            });
+                .then((res) => {
+                    if (window.confirm("Invitation sent")) {
+                        setUserEmail(null)
+                        setInvitingUser(false)
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        }
     }
 
     return (
