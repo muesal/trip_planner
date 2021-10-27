@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import { JsonForms } from '@jsonforms/react';
 import moment from 'moment'
 import { schema, uiSchema, updateSchemas } from './ressources_schema'
+import { schema as friendsSchema, uiSchema as friendsUiSchema } from './invite_friend_schema'
 import { materialRenderers, materialCells, } from '@jsonforms/material-renderers';
 import { retrieveKinds } from './new_trip_schema'
 import { retrieveSections, schema as fieldSchema, uiSchema as fieldUiSchema } from './new_field_schema';
@@ -31,6 +32,8 @@ function Trip(props) {
     const [fieldData, setFieldData] = useState({})
     const [users, setUsers] = useState([])
     const [formsCompletion, setFormsCompletion] = useState()
+    const [invitingUser, setInvitingUser] = useState(false)
+    const [userEmail, setUserEmail] = useState()
     const history = useHistory();
 
     useEffect(() => {
@@ -338,23 +341,35 @@ function Trip(props) {
     }
 
     const inviteUser = () => {
-        let data = {email: "user2@testmail.com"} // TODO: we need a form that does that: pop up to write the users email
-        axios({
-            method: "put",
+        setInvitingUser(!invitingUser)
+    }
+
+    const subimtUserInvitation = () => {
+        if(userEmail && userEmail.email) {
+            let data = {email: userEmail.email} 
+            axios({
+                method: "put",
                 url: `http://127.0.0.1:5000/invite/${props.match.params.id}`,
-            data: {data},
-            credentials: 'include',
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
-            },
-        })
-            .then((res) => {
-                // TODO: flash success message? Server returns either 200 or 400
+                data: {data},
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
+                },
             })
-            .catch((err) => {
-                console.log(err);
-            });
+                .then((res) => {
+                    console.log("RESPONSE", res)
+                    if (res.status === 200 && window.confirm("Invitation sent")) {
+                        setUserEmail(null)
+                        setInvitingUser(false)
+                    } else if (res.status === 202 && window.confirm("No existing account is linked to this email address")) {
+                        setUserEmail(null)
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        }
     }
 
     return (
@@ -372,8 +387,23 @@ function Trip(props) {
                     <Button onClick={finishTrip} variant="contained" color="inherit" >Finish Trip</Button>
                 </div>
 
-                <div className="inviteUerButton">
+                <div className="inviteUserButton">
                     <Button onClick={inviteUser} variant="contained" color="inherit" >Invite User</Button>
+
+                    {invitingUser && 
+                     <>
+                         <JsonForms
+                            data={userEmail}
+                            schema={friendsSchema}
+                            uischema={friendsUiSchema}
+                            renderers={materialRenderers}
+                            onChange={({ data, errors }) => {setUserEmail(data)}}
+                            cells={materialCells}
+                        />
+                        <Button onClick={subimtUserInvitation} variant="outlined" color="primary" >Send invitation</Button>
+
+                    </>
+                    }
                 </div>
 
                 <div className="tripDetails">

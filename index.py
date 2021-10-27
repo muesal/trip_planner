@@ -291,7 +291,7 @@ def invite_friend(trip_id):
     if u is None:
         cur.close()
         con.close()
-        return jsonify(error="Please give a valid email address"), 400
+        return jsonify(error="Please give a valid email address"), 202
 
     cur.execute("SELECT tripID FROM participates WHERE tripID = %s and usrID = %s;", (trip_id, u[0]))
     ut = cur.fetchone()
