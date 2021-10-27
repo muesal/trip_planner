@@ -10,19 +10,16 @@ import { useState } from 'react';
 
 function Account(props) {
 
-  
+
   const [emailForm, setEmailForm] = useState("");
   const [usernameForm, setUsernameForm] = useState("");
   const [passwordForm, setPasswordForm] = useState("");
+  const [passChange, setPasschange] = useState(true);
   const [alert, setAlert] = useState(false);
   const [alertText, setAlertText] = useState("");
   const [alertType, setAlertType] = useState("");
 
   useEffect(() => {
-    getData();
-  });
-
-  const getData = () => {
     axios({
       method: "get",
       url: "http://127.0.0.1:5000/account",
@@ -33,41 +30,47 @@ function Account(props) {
       },
     })
       .then((res) => {
-        setUsr(res.data)
+        setEmailForm(res.data.email);
+        setUsernameForm(res.data.username);
       })
       .catch((err) => {
         console.log(err);
       });
-  }
-  const setUsr = (data) =>{
-    setEmailForm(data.email);
-    setUsernameForm(data.username);
-    setPasswordForm(data.password);
-  }
+  }, []);
 
+  const handlePasswords = () => {
+    setPasschange(!passChange);
+  }
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    var id = props.usrID
+    var userData = {};
     var email = emailForm;
     var username = usernameForm;
-    var password = passwordForm;
-    var userData = {
-      id,
-      email,
-      username,
-      password
-    };
+    if (passChange) {
+      userData = {
+        email,
+        username
+      };
+    }
+    else {
+      var password = passwordForm;
+      userData = {
+        email,
+        username,
+        password
+      };
+
+    }
     updateUser(userData);
   }
 
   const updateUser = async (credentials) => {
-
     axios({
       method: "put",
       url: "http://localhost:5000/account",
       credentials: 'include',
-      data: JSON.stringify({'data': credentials}),
+      data: JSON.stringify({ 'data': credentials }),
       headers: {
         "Content-Type": "application/json",
         'Authorization': "Bearer " + localStorage.getItem('REACT_TOKEN_AUTH_KEY').replaceAll("\"", "")
@@ -91,11 +94,11 @@ function Account(props) {
   }
 
   return (
-    <Container component="main" maxWidth="md">
+    <Container component="main" maxWidth="sm">
       <Box
         sx={{
           display: "flex",
-          marginTop: "22vh",
+          marginTop: "18vh",
           justifyContent: "center",
           bgcolor: "#94AAF7",
           border: 1,
@@ -132,6 +135,7 @@ function Account(props) {
             </Grid>
             <Grid item >
               <TextField
+                disabled={passChange}
                 value={passwordForm}
                 variant="outlined"
                 label="Password"
@@ -140,6 +144,15 @@ function Account(props) {
               />
             </Grid>
             <Grid container item>
+              <Grid item xs>
+                <Button
+                  type="button"
+                  variant="contained"
+                  onClick={handlePasswords}
+                >
+                  Change Password
+                </Button>
+              </Grid>
               <Grid item xs></Grid>
               <Grid item xs>
                 <Button
@@ -150,7 +163,6 @@ function Account(props) {
                   Save changes
                 </Button>
               </Grid>
-              <Grid item xs></Grid>
             </Grid>
           </Grid>
         </Box>

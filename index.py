@@ -14,10 +14,12 @@ load_dotenv()
 DATABASE = os.getenv('DATABASE')
 DATABASE_USERNAME = os.getenv('DATABASE_USERNAME')
 DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
+SECRET_KEY = os.getenv('SECRET_KEY')
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'qasdtfzghjbvcftdr567z8uijnhbvgfcdres45r6t7z8u9i0o'
-app.config["JWT_SECRET_KEY"] = 'qAWQ3W4E5Ra3w4erdfrt67zughu8z7t6frdesw34e5r6tzughji'
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
 app.config["JWT_TOKEN_LOCATION"] = "cookies"
 app.config['JWT_COOKIE_SECURE'] = False
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
@@ -123,6 +125,7 @@ def signin():
     con.close()
 
     user = guard.authenticate(data['email'], data['password'])
+
     return {'access_token': guard.encode_jwt_token(user)}, 200
 
 
@@ -781,7 +784,6 @@ def account():
             'id': user_id,
             'username': user[0],
             'email': user[1],
-            'password': user[2]
         }
 
     elif request.method == 'PUT':
@@ -794,12 +796,15 @@ def account():
         if 'email' not in data or data['email'] is None:
             data['email'] = user[1]
         if 'password' not in data or data['password'] is None:
-            data['password'] = user[1]
-
-        cur.execute("UPDATE usr SET (name, email, hashed_password) = (%s, %s, %s) WHERE usrID = %s "
+            cur.execute("UPDATE usr SET (name, email) = (%s, %s) WHERE usrID = %s "
+                    "RETURNING name, email;",
+                    (f"{data['username']}", f"{data['email']}", user_id))
+            con.commit()
+        else:
+            cur.execute("UPDATE usr SET (name, email, hashed_password) = (%s, %s, %s) WHERE usrID = %s "
                     "RETURNING name, email, hashed_password;",
                     (f"{data['username']}", f"{data['email']}", f"{guard.hash_password(data['password'])}", user_id))
-        con.commit()
+            con.commit()
 
         u = cur.fetchone()
         if u is None:
@@ -807,13 +812,11 @@ def account():
             con.close()
             return jsonify(error="User could not be updated"), 500
 
-        user_auth = guard.authenticate(data['email'], data['password'])
-
         response = {
             'id': user_id,
             'name': u[0],
             'email': u[1],
-            'access_token': guard.encode_jwt_token(user_auth)
+            'access_token': guard.encode_jwt_token(User.identify(user_id))
         }
 
     else:  # DELETE

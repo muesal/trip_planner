@@ -106,7 +106,6 @@ function Signin(props) {
 
           login(response.data.access_token);
 
-          props.loggedHandler(true, response.data.access_token);
           setTimeout(() => {
             setRedirect(true);
           }, 1000);

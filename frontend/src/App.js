@@ -22,13 +22,8 @@ import {logout, useAuth} from './auth/index'
 
 function App() {
 
-  const [logged] = useAuth()
-  const [usrID, setUsrID] = useState("");
+  const [logged] = useAuth();
   const history = useHistory();
-
-  const loggedHandler = (loged, id) => {
-    setUsrID(id);
-  }
 
   const goToTrip = (trip) => {
     history.push(`/trip/${trip}`);
@@ -106,8 +101,8 @@ function App() {
 
       <Switch>
         <Route exact path={["/", "/home"]} render={() => <Home />} />
-        <Route exact path={"/login"} render={() => <Login loggedHandler={loggedHandler} />} />
-        <Route exact path={"/signin"} render={() => <Signin loggedHandler={loggedHandler} />} />
+        <Route exact path={"/login"} render={() => <Login/>} />
+        <Route exact path={"/signin"} render={() => <Signin/>} />
         <Route exact path={"/trips"} render={() => <Trips goToTrip={goToTrip} />} />
         <Route exact path={"/checklist"} render={() => <ChecklistRedirect />} />        
         <Route exact path={"/account"} component={Account} />
