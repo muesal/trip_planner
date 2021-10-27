@@ -214,7 +214,7 @@ function Trip(props) {
   const getUsers = async () => {
     axios({
       method: "get",
-      url: "http://127.0.0.1:5000/users",
+      url: `http://127.0.0.1:5000/users/${props.match.params.id}`,
       credentials: 'include',
       data: {},
       headers: {

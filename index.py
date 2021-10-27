@@ -76,7 +76,7 @@ def home():
 def login():
     data = request.json['data']
     user = guard.authenticate(data['email'], data['password'])
-    return {'access_token': guard.encode_jwt_token(user)}, 200
+    return {'access_token': guard.encode_eternal_jwt_token(user)}, 200
 
 
 @app.route('/refresh', methods=['POST'])
@@ -126,7 +126,7 @@ def signin():
 
     user = guard.authenticate(data['email'], data['password'])
 
-    return {'access_token': guard.encode_jwt_token(user)}, 200
+    return {'access_token': guard.encode_eternal_jwt_token(user)}, 200
 
 
 # Create a new trip.
@@ -238,12 +238,12 @@ def get_kinds():
 
 
 # Returns all users 
-@app.route('/users', methods=['GET'])
-def get_users():
+@app.route('/users/<trip_id>', methods=['GET'])
+def get_users(trip_id):
     con = connect()
     cur = con.cursor()
 
-    cur.execute("SELECT usrID, name FROM usr;")
+    cur.execute("SELECT u.usrID, u.name FROM usr u INNER JOIN participates p ON p.usrID = u.usrID AND p.tripID = %s;", trip_id)
     users = cur.fetchall()
 
     # If no user were found return only 'none'
@@ -816,7 +816,7 @@ def account():
             'id': user_id,
             'name': u[0],
             'email': u[1],
-            'access_token': guard.encode_jwt_token(User.identify(user_id))
+            'access_token': guard.encode_eternal_jwt_token(User.identify(user_id))
         }
 
     else:  # DELETE

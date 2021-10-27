@@ -71,13 +71,13 @@ function Main(props) {
                       <Typography component="div" variant="h5" color="white">
                         {row.kind}
                       </Typography>
-                      <Typography variant="subtitle1" color="text.secondary" color="white">
+                      <Typography variant="subtitle1"  color="white">
                         {row.content}
                       </Typography>
-                      <Typography variant="subtitle1" color="text.secondary" component="div" color="white">
+                      <Typography variant="subtitle1"  component="div" color="white">
                         {`${row.location} - ${moment(row.start).format("DD/MM/YYYY")}`}
                       </Typography>
-                      <Typography variant="subtitle1" color="text.secondary" component="div" color="white">
+                      <Typography variant="subtitle1"  component="div" color="white">
                         duration : {row.duration} days
                       </Typography>
                     </CardContent>
