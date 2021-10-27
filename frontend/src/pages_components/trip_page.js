@@ -61,7 +61,7 @@ function Trip(props) {
       else
         changeSchemas(fields[selectedDay][selectedForm])
     }
-  }, [fields])
+  }, [fields, users])
 
   useEffect(() => {
     if (days.length > 0 && fields)
@@ -360,10 +360,10 @@ function Trip(props) {
         },
       })
         .then((res) => {
-          console.log("RESPONSE", res)
           if (res.status === 200 && window.confirm("Invitation sent")) {
             setUserEmail(null)
             setInvitingUser(false)
+            getUsers()
           } else if (res.status === 202 && window.confirm("No existing account is linked to this email address")) {
             setUserEmail(null)
           }
