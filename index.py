@@ -171,7 +171,8 @@ def add_trip():
 
     cur.close()
     con.close()
-    return redirect(url_for('trip', trip_id=created_trip), code=200)
+    return {'id': created_trip}
+    #return redirect(url_for('trip', trip_id=created_trip), code=200)
 
 
 # Return 5 soonest trips this user participates in

@@ -66,7 +66,7 @@ function NewTripForm(props) {
             cells={materialCells}
         />
 
-        <Grid item  container direction="row" justify="flex-end" style={{paddingTop:'2%'}}>
+        <Grid item  container direction="row" justifyContent="flex-end" style={{paddingTop:'2%'}}>
                 <Button onClick={cancelCreation} style={{margin:'2%'}} color="secondary" variant="outlined"> Cancel </Button>
                 <Button onClick={submitTrip} style={{margin:'2%'}} color="primary" variant="outlined"> Create </Button>
         </Grid>
