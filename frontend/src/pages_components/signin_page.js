@@ -141,7 +141,7 @@ function Signin(props) {
           }}
         >
           <Grid container spacing="10" direction="column" alignItems="center"  >
-            <Typography component="h1" variant="h5">
+            <Typography component="h1" variant="h5" color="black">
               Sign in
             </Typography>
             <Grid item >
@@ -189,8 +189,8 @@ function Signin(props) {
             <Grid item>
               <Button
                 type="button"
-                variant="text"
-                color="inherit"
+                variant="outlined"
+                color="success"
                 onClick={handleRegister}
               >
                 Sign Up

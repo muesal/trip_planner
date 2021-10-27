@@ -113,7 +113,7 @@ function Account(props) {
           }}
         >
           <Grid container spacing="10" direction="column" alignItems="center"  >
-            <Typography component="h1" variant="h5">
+            <Typography component="h1" variant="h5" color="black">
               Your account
             </Typography>
             <Grid item >
@@ -149,8 +149,8 @@ function Account(props) {
               <Grid item xs>
                 <Button
                   type="button"
-                  variant="text"
-                  color="inherit"
+                  variant="outlined"
+                  color="success"
                   onClick={handlePasswords}
                 >
                   Change Password
@@ -160,8 +160,8 @@ function Account(props) {
               <Grid item xs>
                 <Button
                   type="button"
-                  variant="text"
-                  color="inherit"
+                  variant="outlined"
+                  color="success"
                   onClick={handleUpdate}
                 >
                   Save changes

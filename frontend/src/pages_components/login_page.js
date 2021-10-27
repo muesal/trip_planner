@@ -90,7 +90,7 @@ function Login(props) {
           }}
         >
           <Grid container spacing="10" direction="column" alignItems="center"  >
-            <Typography component="h1" variant="h5">
+            <Typography component="h1" variant="h5" color="black">
               Login
             </Typography>
             <Grid item >
@@ -118,8 +118,8 @@ function Login(props) {
               <Grid item xs>
                 <Button
                   type="button"
-                  variant="text"
-                  color="inherit"
+                  variant="outlined"
+                  color="success"
                   onClick={handleLogin}
                 >
                   Login
