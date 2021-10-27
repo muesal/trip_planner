@@ -52,7 +52,7 @@ function Main(props) {
 
   return (
 
-    <Grid container xs>
+    <Grid container >
       <Grid item xs>
 
       </Grid>
@@ -95,11 +95,11 @@ function Main(props) {
           })}
         </div>
       </Grid>
-      <Grid container item xs>
+      <Grid container alignContent="flex-start" item xs>
         <Grid item xs>
 
         </Grid>
-        <Grid item alignContent="flex-start">
+        <Grid item >
           <Box className="newTripButton" sx={{mt: 3}}>
             <Button onClick={handleOpen} variant="contained" color="inherit" >Create Trip</Button>
 
