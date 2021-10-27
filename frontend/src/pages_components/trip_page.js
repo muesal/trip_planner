@@ -345,9 +345,8 @@ function Trip(props) {
     }
 
     const subimtUserInvitation = () => {
-        if(userEmail) {
+        if(userEmail && userEmail.email) {
             let data = {email: userEmail.email} 
-            console.log("data", data)
             axios({
                 method: "put",
                 url: `http://127.0.0.1:5000/invite/${props.match.params.id}`,
@@ -359,9 +358,12 @@ function Trip(props) {
                 },
             })
                 .then((res) => {
-                    if (window.confirm("Invitation sent")) {
+                    console.log("RESPONSE", res)
+                    if (res.status === 200 && window.confirm("Invitation sent")) {
                         setUserEmail(null)
                         setInvitingUser(false)
+                    } else if (res.status === 202 && window.confirm("No existing account is linked to this email address")) {
+                        setUserEmail(null)
                     }
                 })
                 .catch((err) => {
