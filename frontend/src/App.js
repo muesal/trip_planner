@@ -35,31 +35,31 @@ function App() {
       <header>
         <div className="menuTitle">
           <h1>
-            UTRIP
+            UTrip
           </h1>
         </div>
         {logged ? (
           <div className="menuButtons">
             <div className="menuButton">
-              <Button component={Link} to="/home" variant="contained" color="primary">
+              <Button component={Link} to="/home" variant="text" color="inherit">
                 Home
               </Button>
             </div>
             <div className="menuButton">
-              <Button component={Link} to="/trips" variant="contained" color="primary">
+              <Button component={Link} to="/trips" variant="text" color="inherit">
                 Trips
               </Button>
             </div>
 
             <div className="menuButton">
-              <Button component={Link} to="/checklist" variant="contained" color="primary">
+              <Button component={Link} to="/checklist" variant="text" color="inherit">
                 Checklist
               </Button>
             </div>
           </div>) : (
           <div className="menuButtons">
             <div className="menuButton">
-              <Button component={Link} to="/home" variant="contained" color="primary">
+              <Button component={Link} to="/home" variant="text" color="inherit">
                 Home
               </Button>
             </div>
@@ -76,7 +76,7 @@ function App() {
               </Button>
             </div>
             <div className="menuButton">
-              <Button onClick={() => logout()} component={Link} to="/home" variant="contained" color="primary">
+              <Button onClick={() => logout()} component={Link} to="/home" variant="text" color="inherit">
                 Logout
               </Button>
             </div>
@@ -84,12 +84,12 @@ function App() {
         ) : (
           <div className="accountButton">
             <div className="menuButton">
-              <Button component={Link} to="/signin" variant="contained" color="primary">
+              <Button component={Link} to="/signin" variant="text" color="inherit">
                 Sign in
               </Button>
             </div>
             <div className="menuButton">
-              <Button component={Link} to="/login" variant="contained" color="primary">
+              <Button component={Link} to="/login" variant="text" color="inherit">
                 Log in
               </Button>
             </div>

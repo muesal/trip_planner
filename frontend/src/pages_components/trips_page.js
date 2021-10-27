@@ -62,27 +62,27 @@ function Main(props) {
             return (
               <div className="tripCard" key={row.id}>
              
-                <Card sx={{ border: 1, display: 'flex', backgroundColor: 'rgb(156, 156, 247)' }}>
+                <Card sx={{ border: 1, display: 'flex', backgroundColor: '#118B22', color: "white" }}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                     <CardContent sx={{ flex: '1 0 auto' }}>
-                      <Typography component="div" variant="h4">
+                      <Typography component="div" variant="h4" color="white">
                         {row.name}
                       </Typography>
-                      <Typography component="div" variant="h5">
+                      <Typography component="div" variant="h5" color="white">
                         {row.kind}
                       </Typography>
-                      <Typography variant="subtitle1" color="text.secondary" >
+                      <Typography variant="subtitle1" color="text.secondary" color="white">
                         {row.content}
                       </Typography>
-                      <Typography variant="subtitle1" color="text.secondary" component="div">
+                      <Typography variant="subtitle1" color="text.secondary" component="div" color="white">
                         {`${row.location} - ${moment(row.start).format("DD/MM/YYYY")}`}
                       </Typography>
-                      <Typography variant="subtitle1" color="text.secondary" component="div">
+                      <Typography variant="subtitle1" color="text.secondary" component="div" color="white">
                         duration : {row.duration} days
                       </Typography>
                     </CardContent>
                     <CardActions>
-                      <Button onClick={() => { props.goToTrip(row.id) }} variant="text" color="primary">
+                      <Button onClick={() => { props.goToTrip(row.id) }} variant="text" color="inherit">
                         More
                       </Button>
                     </CardActions>
@@ -101,7 +101,7 @@ function Main(props) {
         </Grid>
         <Grid item >
           <Box className="newTripButton" sx={{mt: 3}}>
-            <Button onClick={handleOpen} variant="contained" color="inherit" >Create Trip</Button>
+            <Button onClick={handleOpen} variant="contained" >Create Trip</Button>
 
             {newTripDialogOpen &&
               <NewTripDialog handleClose={handleClose} getTrips={getTrips} />}

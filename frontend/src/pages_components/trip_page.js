@@ -376,18 +376,18 @@ function Trip(props) {
 
   return (
 
-    <main>
+    <main className="tripcard">
       <Grid container direction="row" justifyContent="space-between" sx={{ mt:2}}>
         <Grid item>
-          <Button onClick={handleOpen} variant="contained" color="primary" >Edit Trip</Button>
+          <Button onClick={handleOpen} variant="contained" >Edit Trip</Button>
 
           {tripEditDialogOpen &&
             <EditTripDialog handleClose={handleClose} trip={trip} getTrip={getTrip} getFields={getFields} />}
         </Grid>
-        <Grid item><Button onClick={inviteUser} variant="contained" color="inherit" >Invite User</Button>
+        <Grid item><Button onClick={inviteUser} variant="contained"  >Invite User</Button>
         </Grid>
         <Grid item>
-          <Button onClick={finishTrip} variant="contained" color="inherit" >Finish Trip</Button>
+          <Button onClick={finishTrip} variant="contained"  >Finish Trip</Button>
         </Grid>
 
       </Grid>

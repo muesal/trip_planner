@@ -72,12 +72,11 @@ function Login(props) {
   return (
     <Container component="main" maxWidth="xs">
 
-      <Box
+      <Box className="greencont"
         sx={{
           display: "flex",
           marginTop: "22vh",
           justifyContent: "center",
-          bgcolor: "#94AAF7",
           border: 1,
           borderRadius: 1
         }}
@@ -98,6 +97,7 @@ function Login(props) {
               <TextField
                 variant="outlined"
                 label="Email"
+                color="success"
                 onChange={e => setEmailForm( e.target.value )}
               />
             </Grid>
@@ -106,6 +106,7 @@ function Login(props) {
                 variant="outlined"
                 label="Password"
                 type="password"
+                color="success"
                 onChange={e => setPasswordForm( e.target.value )}
               />
             </Grid>
@@ -117,7 +118,8 @@ function Login(props) {
               <Grid item xs>
                 <Button
                   type="button"
-                  variant="contained"
+                  variant="text"
+                  color="inherit"
                   onClick={handleLogin}
                 >
                   Login

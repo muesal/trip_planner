@@ -123,12 +123,11 @@ function Signin(props) {
 
     <Container component="main" maxWidth="xs">
 
-      <Box
+      <Box className="greencont"
         sx={{
           display: "flex",
           marginTop: 12,
           justifyContent: "center",
-          bgcolor: "#94AAF7",
           border: 1,
           borderRadius: 1
         }}
@@ -148,6 +147,7 @@ function Signin(props) {
             <Grid item >
               <TextField
                 variant="outlined"
+                color="success"
                 label="Username"
                 onChange={e => setUsernameForm(e.target.value)}
                 error={usernameError}
@@ -157,6 +157,7 @@ function Signin(props) {
             <Grid item >
               <TextField
                 variant="outlined"
+                color="success"
                 label="Email"
                 onChange={e => setEmailForm(e.target.value)}
                 error={emailError}
@@ -166,6 +167,7 @@ function Signin(props) {
             <Grid item >
               <TextField
                 variant="outlined"
+                color="success"
                 label="Password"
                 type="password"
                 onChange={e => setPasswordForm(e.target.value)}
@@ -176,6 +178,7 @@ function Signin(props) {
             <Grid item >
               <TextField
                 variant="outlined"
+                color="success"
                 label="Confirm Password"
                 type="password"
                 onChange={e => setConfPasswordForm(e.target.value)}
@@ -186,7 +189,8 @@ function Signin(props) {
             <Grid item>
               <Button
                 type="button"
-                variant="contained"
+                variant="text"
+                color="inherit"
                 onClick={handleRegister}
               >
                 Sign Up

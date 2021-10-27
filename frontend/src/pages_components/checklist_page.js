@@ -145,7 +145,7 @@ function Checklist(props) {
 
     return (
 
-        <Box alignSelf='flex-start' alignContent='center'
+        <Box alignSelf='flex-start' alignContent='center' className="tripcard"
              sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex', maxHeight: "80vh", width: 1}}
         >
             <Tabs
@@ -165,7 +165,7 @@ function Checklist(props) {
             </Tabs>
             
             <List sx={{ m: 5 , bgcolor: 'background.paper' }}>
-                {items && checked && items.map((item, index) => {
+                {(items && items.length > 0 &&checked) ? items.map((item, index) => {
                     return (
                         <ListItem
                             key={index}
@@ -185,7 +185,7 @@ function Checklist(props) {
                             </ListItemButton>
                         </ListItem>
                     );
-                })}
+                }) : <p> Empty checklist </p>}
             </List>
             
 

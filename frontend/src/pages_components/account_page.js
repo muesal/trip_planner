@@ -95,12 +95,11 @@ function Account(props) {
 
   return (
     <Container component="main" maxWidth="sm">
-      <Box
+      <Box className="greencont"
         sx={{
           display: "flex",
           marginTop: "18vh",
           justifyContent: "center",
-          bgcolor: "#94AAF7",
           border: 1,
           borderRadius: 1
         }}
@@ -122,6 +121,7 @@ function Account(props) {
                 value={usernameForm}
                 variant="outlined"
                 label="Username"
+                color="success"
                 onChange={e => setUsernameForm(e.target.value)}
               />
             </Grid>
@@ -130,6 +130,7 @@ function Account(props) {
                 value={emailForm}
                 variant="outlined"
                 label="Email"
+                color="success"
                 onChange={e => setEmailForm(e.target.value)}
               />
             </Grid>
@@ -140,6 +141,7 @@ function Account(props) {
                 variant="outlined"
                 label="Password"
                 type="password"
+                color="success"
                 onChange={e => setPasswordForm(e.target.value)}
               />
             </Grid>
@@ -147,7 +149,8 @@ function Account(props) {
               <Grid item xs>
                 <Button
                   type="button"
-                  variant="contained"
+                  variant="text"
+                  color="inherit"
                   onClick={handlePasswords}
                 >
                   Change Password
@@ -157,7 +160,8 @@ function Account(props) {
               <Grid item xs>
                 <Button
                   type="button"
-                  variant="contained"
+                  variant="text"
+                  color="inherit"
                   onClick={handleUpdate}
                 >
                   Save changes

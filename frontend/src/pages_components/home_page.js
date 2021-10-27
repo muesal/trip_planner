@@ -6,11 +6,10 @@ function Home() {
 
   return (
 
-    <Box
+    <Box className="greencont"
       sx={{
         width: 1,
         justifyContent: "center",
-        bgcolor: "#94AAF7",
       }}
     >
       <Box
@@ -22,7 +21,7 @@ function Home() {
       >
         <Grid container spacing="10" direction="column" alignItems="center"  >
           <Typography component="h1" variant="h2">
-            WELCOME TO UTRIP
+            WELCOME TO UTrip
           </Typography>
           <Typography component="h1" variant="h4">
             Plan your trip easier than ever!
