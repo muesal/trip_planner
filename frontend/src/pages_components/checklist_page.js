@@ -24,7 +24,7 @@ function Checklist(props) {
     const [data, setData] = useState();
     const [trips, setTrips] = useState(null);
     const [items, setItems] = useState()
-    const [value, setValue] = useState(props.match.params.id - 1);
+    const [value, setValue] = useState(0);
     const [checked, setChecked] = useState();
 
     const [forceUpdate, setForceUpdate] = useState(false);
@@ -43,7 +43,7 @@ function Checklist(props) {
 
     const handleChange = (event, newValue) => {
         setValue(newValue);
-        history.push(`/checklist/${newValue + 1}`);
+        history.push(`/checklist/${trips[newValue].id}`);
 
         let forceUpdateTmp = forceUpdate
         setForceUpdate(!forceUpdateTmp);
