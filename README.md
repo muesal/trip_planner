@@ -1,80 +1,62 @@
-# Trip Planning App
+# UTrip
 
 ## Set Up
 
-Follow this [tutorial](https://dev.to/andrewbaisden/creating-react-flask-apps-that-connect-to-postgresql-and-harperdb-1op0), ignoring the stuff about harperdb
 
 Assuming that python3 is installed:
 
-1. Install [nmp](https://www.npmjs.com/) (used for some js funcionality, I guess)
+Create a virtual environment in the directory of the project, i.e. the repository root:
+>python3 -m venv trip<br>
 
-2. Create a virtual environment in the directory of the project, i.e. the repository root, and activate it:
-    >python3 -m venv trip<br>
-    >. trip/bin/activate
-    
-    If you call it trip, it will be ignorded by git.
+Activate it on Linux:
+>source trip/bin/activate
 
-4. In the environment, install Flask-related things:
-    > pip install flask
+Or on windows:
+>.\trip\Scripts\activate
 
-    Flask-Cors is used by the web app to fetch data from the API.
-    >pip install Flask-Cors
-
-    python-dotenv reads key-value pairs from the .env file
-    >pip install python-dotenv
-
-    psycopg2 is used to send SQL statements to the database.
-    It needs some [prerequisites](https://www.psycopg.org/docs/install.html#build-prerequisites), if the installation fails check if they are all met.
-    >pip install psycopg2
-
-### Create a PostgreSQL Database
-
-Create a new database (e.g. "trip_planner") and execute `trip.sql`, creating three tables and inserting to rows to the table resource.
+Once the environment is activated install all backend-requirements:
+>pip install -r requirements.txt
 
 
-### Create a Flask backend server that is connected to the pgSCL database
+The backend uses a PostgreSQL database.
+Install Postgresql following this: https://www.postgresql.org/download/.
+Create a database where you want UTrip to store the data and a fitting `.env`, where you store the corresponding information.
+>DATABASE="utrip"<br>
+>DATABASE_USERNAME="postgres"<br>
+>DATABASE_PASSWORD="123456789"<br>
 
-The flask backend server is implemented in `index.py`.
-
-In order for the app to connect to the database add a file `.env` the root of the repository, containing add the following lines:
->DATABASE="trip_planner" <br>
->DATABASE_USERNAME="postgres" <br>
->DATABASE_PASSWORD=""
+The file should also contain some functionality for flask, namely:
+>SECRET_KEY="very_secrete"<br>
+>JWT_SECRET_KEY="do_not_share"<br>
 
 
-When in the root of the repository activate the python environment and set up the environment for flask by running:
+Fo the frontend you need Node.js.
+To install it on linux run:
+>sudo apt install npm<br>
+
+On windows visit https://nodejs.org/en/download/ and download and install it.
+
+Next install all the packages needed for the fronted.
+Navigate to the `frontend` folder and type:
+>npm install<br>
+
+Now you are ready to go!
+
+To start flask naigate into the root of the repositors and set the path to the flask app, on Linux:
 >export FLASK_APP=index.py <br>
->export FLASK_ENV=development
+>export FLASK_ENV=development <br>
 
-Then start the web app with
->flask run
+And on Windows:
+>set FLASK_APP=index.py <br>
+>set FLASK_ENV=development <br>
 
-The output houl look like this:
-> Serving Flask app "index.py" (lazy loading) <br>
-> Environment: development <br>
-> Debug mode: on <br>
-> Running on http://127.0.0.1:5000/ (Press CTRL+C to quit) <br>
-> Restarting with stat
+And then start Flask:
+>flask run<br>
 
-See the web app by clicking the link the app is running on (line 4).
-You should see the content of the resource table in json format.
-This out put is generated with `def home()` in `index.py`.
+In another window navigate into `frontend` and start the frontend with
+>npm start<br>
 
-When started in the dev environment, changes on the files are taken into account automatically, with no need to restart the server, reloading the page is sufficient.
-It is however common that if something fails instead of the actual exception a `TypeError: exceptions must derive from BaseException` is shown.
-Reload the page to see the actual error message.
-However, to change something on the DB from outside the web app, the server must be stopped.
+##User Manual
 
-If the server cannot connect to the database, maybe the `postgresql.conf` is configured wrongly.
-Find it with `locate postgresql.conf` and adjust the port to 5432.
-
-### Build the front end
-
-The files in the frontend folder were created with the command npx create-react-app frontend`.
-The Files `frontend/src/App.js` and `frontend/src/App.css`, containing the main functionalities of the frontend, are adapted to fit our purpose.
-
-Start the server in the directory 'frontend' with:
->npm start 
-
-Consider `frontend/READme.md` for more information about React.
+The user manual can be found in `UTrip.pdf`
 
